@@ -20,6 +20,7 @@ import logger from "../logger/index.js";
 import ProductModel, { PRODUCT_CATEGORY } from "../models/product.model.js";
 import CartModel from "../models/cart.model.js";
 import PackageModel from "../models/package.model.js";
+import TierModel from "../models/tier.model.js";
 
 // Register User with Mobile Number..
 const RegisterUser = async (req, res, next) => {
@@ -826,7 +827,7 @@ const GetPackages = async (req, res, next) => {
   }
 };
 
-getTier: async (req, res, next) => {
+const GetTier = async (req, res, next) => {
   try {
     const tier = await TierModel.find({});
 
@@ -857,4 +858,5 @@ export {
   GetProducts,
   GetSingleProduct,
   GetPackages,
+  GetTier
 };

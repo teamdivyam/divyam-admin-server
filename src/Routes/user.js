@@ -9,6 +9,7 @@ import {
     GetPackages,
     GetProducts,
     GetSingleProduct,
+    GetTier,
     GUEST_USER,
     LOGOUT_USER,
     RegisterUser,
@@ -118,5 +119,6 @@ Route.delete('/cart', CartController.deleteItemInCart);
 
 
 Route.get('/packages', GetPackages);
+Route.get('/tier', GetTier);
 
 export default Route;
