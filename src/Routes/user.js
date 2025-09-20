@@ -8,6 +8,7 @@ import {
     GET_PRIMARY_ADDRESS,
     GetPackages,
     GetProducts,
+    GetSinglePackage,
     GetSingleProduct,
     GetTier,
     GUEST_USER,
@@ -119,6 +120,7 @@ Route.delete('/cart', CartController.deleteItemInCart);
 
 
 Route.get('/packages', GetPackages);
+Route.get('/packages/:packageSlug', GetSinglePackage);
 Route.get('/tier', GetTier);
 
 export default Route;

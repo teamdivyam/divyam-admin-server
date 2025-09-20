@@ -801,13 +801,8 @@ const GetPackages = async (req, res, next) => {
 
     const packages = await PackageModel.find(filter)
       .select(
-        `-_id packageName packageId slug mainPackageImage packageBannerImages 
-        products description tags discountPrice discount originalPrice capacity`
+        `-_id packageName mainPackageImage originalPrice discountPercent discountPrice description tags rating capacity slug`
       )
-      .populate({
-        path: "products.productObjectId",
-        select: "productId slug name mainPackageImage tags variants",
-      })
       .skip((page - 1) * limit)
       .limit(limit)
       .exec();
@@ -820,6 +815,39 @@ const GetPackages = async (req, res, next) => {
       total,
       page,
       totalPages: Math.ceil(total / limit),
+    });
+  } catch (error) {
+    console.error("error in get product:", error);
+    next(createHttpError(500, "Internal Server Error"));
+  }
+};
+
+const GetSinglePackage = async (req, res, next) => {
+  try {
+    const { packageSlug } = req.params;
+    const product = await PackageModel.findOne({ slug: packageSlug })
+      .select(
+        `-_id packageName mainPackageImage packageBannerImages products 
+        description tags discounPrice originalPrice discountPercent rating capacity packageId isVisible`
+      )
+      .populate({
+        path: "products.productObjectId",
+        select: "-_id name slug mainImage variants",
+        populate: {
+          path: "variants.stock",
+          select:
+            "-_id sku name category quantity status variantAttributes remarks",
+        },
+      })
+      .lean();
+
+    if (!product) {
+      return next(createHttpError(404, "Product not found"));
+    }
+
+    res.status(200).json({
+      success: true,
+      product: product,
     });
   } catch (error) {
     console.error("error in get product:", error);
@@ -858,5 +886,6 @@ export {
   GetProducts,
   GetSingleProduct,
   GetPackages,
-  GetTier
+  GetTier,
+  GetSinglePackage
 };
