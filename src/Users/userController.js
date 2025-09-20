@@ -828,7 +828,7 @@ const GetSinglePackage = async (req, res, next) => {
     const product = await PackageModel.findOne({ slug: packageSlug })
       .select(
         `-_id packageName mainPackageImage packageBannerImages products 
-        description tags discounPrice originalPrice discountPercent rating capacity packageId isVisible`
+        description tags discounPrice originalPrice discountPercent rating capacity packageId isVisible policy`
       )
       .populate({
         path: "products.productObjectId",
