@@ -35,7 +35,7 @@ const StockSchema = new mongoose.Schema(
       enum: Object.values(STOCK_STATUS),
       default: STOCK_STATUS.active,
     },
-    parentProduct: {
+    parentStockObjectId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Stock",
       default: null,

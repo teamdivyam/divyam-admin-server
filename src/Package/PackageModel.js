@@ -1,8 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 import slugify from "slugify";
 
-
-
 const PackageSchema = new Schema({
     pkg_id: { type: String, unique: true, required: true },
     name: { type: String, required: true, unique: true, },
@@ -47,18 +45,16 @@ const PackageSchema = new Schema({
     notes: { type: String, },
 }, { timestamps: true })
 
-
 PackageSchema.pre("save", function (next) {
+  if (this.isModified("name")) {
+    this.slug = slugify(this.name, { lower: true, strict: true });
+  }
 
-    if (this.isModified("name")) {
-        this.slug = slugify(this.name, { lower: true, strict: true });
-    }
+  next();
+});
 
-    next();
-}
-);
 
 
 const PackageModel = mongoose.model("Package", PackageSchema);
 
-export default PackageModel
+export default PackageModel;

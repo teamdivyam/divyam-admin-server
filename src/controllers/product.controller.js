@@ -24,6 +24,23 @@ const ProductController = {
     }
   },
 
+  getProductOption: async (req, res, next) => {
+    try {
+      const productOption = await ProductModel.find({})
+        .select("_id productId name variants.variantName variants.variantId")
+        .populate({ path: "stock", select: "quantity" })
+        .populate({ path: "variants.stock", select: "-_id quantity" });
+
+      res.status(200).json({
+        success: true,
+        productOption: productOption,
+      });
+    } catch (error) {
+      console.error("error in get product:", error);
+      next(createHttpError(500, "Internal Server Error"));
+    }
+  },
+
   createProduct: async (req, res, next) => {
     try {
       const {

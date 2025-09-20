@@ -3,12 +3,10 @@ import rateLimit from "express-rate-limit";
 import authUser from "../middleware/authUser.js";
 import {
     ADD_NEW_ADDRESS,
-    AddItemInCart,
     DELETE_SINGLE_ADDRESS,
-    DeleteItemInCart,
     GET_ALL_ADDRESS,
     GET_PRIMARY_ADDRESS,
-    GetCart,
+    GetPackages,
     GetProducts,
     GetSingleProduct,
     GUEST_USER,
@@ -17,7 +15,6 @@ import {
     SET_DEFAULT_ADDRESS,
     UPDATE_EXISTING_ADDRESS,
     UPDATE_PROFILE_PICTURE,
-    UpdateItemInCart,
     UpdateUser,
     USER_PRFOILE,
     VERIFY_OTP,
@@ -48,6 +45,7 @@ import {
 import Upload from "../utils/multerUpload.js"
 import { config } from "../config/_config.js";
 import isGuestUser from "../middleware/isGuestUser.js";
+import CartController from "../controllers/cart.controller.js";
 
 const limitOTP = rateLimit({
     windowMs: 60000 * 5, //5 minutes
@@ -85,7 +83,7 @@ Route.get('/user/address/primary', authUser, GET_PRIMARY_ADDRESS)
 Route.delete('/user/address/:ADDRESS_ID', authUser, DELETE_SINGLE_ADDRESS); //del-address
 
 //  PACKAGES
-Route.get('/packages', GET_ALL_PACKAGE_FOR_USERS);
+// Route.get('/packages', GET_ALL_PACKAGE_FOR_USERS);
 Route.get('/featured-package', GET_ALL_FEATURED_PACKAGE);
 Route.get('/package/:SLUG', GET_SINGLE_PACKAGE_FOR_USERS);
 Route.get('/user/orders', authUser, GET_ALL_ORDERS_BY_USER_ID);  //req.user-All_Orders
@@ -113,9 +111,12 @@ Route.get('/logout', authUser, LOGOUT_USER);
 Route.get('/products', GetProducts);
 Route.get('/products/:productSlug', GetSingleProduct);
 
-Route.get('/cart', authUser, GetCart);
-Route.post('/cart', authUser, AddItemInCart);
-Route.patch('/cart', authUser, UpdateItemInCart);
-Route.delete('/cart', authUser, DeleteItemInCart);
+Route.get('/cart', CartController.getUserCart);
+Route.post('/cart', CartController.addItemInCart);
+Route.patch('/cart', CartController.updateItemInCart);
+Route.delete('/cart', CartController.deleteItemInCart);
+
+
+Route.get('/packages', GetPackages);
 
 export default Route;

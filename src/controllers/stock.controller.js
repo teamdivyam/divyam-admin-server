@@ -1,10 +1,9 @@
 import createHttpError from "http-errors";
 import StockModel from "../models/stock.model.js";
 import {
-  StockSchema,
-  CreateStockVariantSchema,
-  SelectStockVariantSchema,
-  VariantUpdateValidationSchema,
+  // VariantUpdateValidationSchema,
+  AddNewStockSchema,
+  AddNewStockVariantSchema,
 } from "../Validators/stock.js";
 import {
   checkStockAlreadyExists,
@@ -42,7 +41,7 @@ const StockController = {
 
       // Variant stock of stock
       const variantStock = await StockModel.find({
-        parentProduct: stock._id,
+        parentStockObjectId: stock._id,
       }).lean();
 
       // Total quantity of stock
@@ -65,7 +64,7 @@ const StockController = {
   getStockVariantOptions: async (req, res, next) => {
     try {
       const options = await StockModel.find({
-        parentProduct: null,
+        parentStockObjectId: null,
         isVariant: false,
       }).select("name sku category");
 
@@ -81,36 +80,30 @@ const StockController = {
 
   createStock: async (req, res, next) => {
     try {
-      const { variant, variantMode } = req.query;
+      const { isStockHasVariants, isVariantParentAlreadyExists } = req.query;
 
-      console.log(variant, variantMode, req.body);
-
-      if (variant === "false") {
-        const { error, value: validatedData } = StockSchema.validate(
+      /** True if stock has no variants */
+      if (isStockHasVariants === "false") {
+        const { error, value: validatedData } = AddNewStockSchema.validate(
           req.body,
-          { stripUnknown: true } // Remove Unknown Fields
+          { abortEarly: false, stripUnknown: true } // Remove Unknown Fields
         );
-
         if (error) {
-          // Create a detailed error message
-          const errorMessage = error.details.map((detail) => ({
-            field: detail.path.join("."),
-            message: detail.message,
-            type: detail.type,
-          }));
-
-          console.log("Error message:", errorMessage);
-
-          // Send HTTP 400 error with validation details
+          const errorMessage = error.details.map((detail) => detail.message);
           return next(
             createHttpError(400, "Validation failed", {
-              errors: errorMessage,
+              validationErrorList: errorMessage,
             })
           );
         }
 
         if (await checkStockAlreadyExists(validatedData.name)) {
-          return next(createHttpError(409, "Stock already existed"));
+          return next(
+            createHttpError(
+              409,
+              `${validatedData.name} name stock already existed`
+            )
+          );
         }
 
         const sku = generateStockId(validatedData.category);
@@ -120,35 +113,28 @@ const StockController = {
           name: validatedData.name,
           category: validatedData.category,
           quantity: validatedData.quantity,
-          price: validatedData.price,
+          attributes: {
+            unit: validatedData.unit,
+            sizeOrWeight: validatedData.sizeOrWeight,
+            capacity: validatedData.capacity,
+          },
         });
 
-        return res.status(201).json({
-          success: true,
-          message: "Stock created successfully",
-        });
-      } else if (variant === "true") {
-        if (variantMode === "select") {
+        return res.status(201).json({ message: "New stock created" });
+      } else {
+        /** True if stock has variants */
+        /** True if parent stock has already exists */
+        if (isVariantParentAlreadyExists === "true") {
           const { error, value: validatedData } =
-            SelectStockVariantSchema.validate(
-              req.body,
-              { stripUnknown: true } // Remove Unknown Fields
-            );
-
+            AddNewStockVariantSchema.validate(req.body, {
+              abortEarly: false, // return all validation error at once
+              stripUnknown: true, // remove unknown field
+            });
           if (error) {
-            // Create a detailed error message
-            const errorMessage = error.details.map((detail) => ({
-              field: detail.path.join("."),
-              message: detail.message,
-              type: detail.type,
-            }));
-
-            console.log("Error message:", errorMessage);
-
-            // Send HTTP 400 error with validation details
+            const errorMessage = error.details.map((detail) => detail.message);
             return next(
               createHttpError(400, "Validation failed", {
-                errors: errorMessage,
+                validationErrorList: errorMessage,
               })
             );
           }
@@ -165,7 +151,7 @@ const StockController = {
             sku: skuVarientStock,
             name: validatedData.variantStockName,
             category: validatedData.variantStockCategory,
-            parentProduct: validatedData.parentStockId,
+            parentStockObjectId: validatedData.parentStockId,
             isVariant: true,
             variantAttributes: {
               unit: validatedData.variantStockUnit,
@@ -180,27 +166,19 @@ const StockController = {
             message: "Stock created successfully",
           });
         }
-        if (variantMode === "create") {
+
+        /** True if parent stock not available */
+        if (isVariantParentAlreadyExists === "false") {
           const { error, value: validatedData } =
-            CreateStockVariantSchema.validate(
-              req.body,
-              { stripUnknown: true } // Remove Unknown Fields
-            );
-
+            AddNewStockVariantSchema.validate(req.body, {
+              abortEarly: false, // return all validation error at once
+              stripUnknown: true, // remove unknown field
+            });
           if (error) {
-            // Create a detailed error message
-            const errorMessage = error.details.map((detail) => ({
-              field: detail.path.join("."),
-              message: detail.message,
-              type: detail.type,
-            }));
-
-            console.log("Error message:", errorMessage);
-
-            // Send HTTP 400 error with validation details
+            const errorMessage = error.details.map((detail) => detail.message);
             return next(
               createHttpError(400, "Validation failed", {
-                errors: errorMessage,
+                validationErrorList: errorMessage,
               })
             );
           }
@@ -228,10 +206,10 @@ const StockController = {
           );
 
           await StockModel.create({
+            parentStockObjectId: parentStock._id,
             sku: skuVarientStock,
             name: validatedData.variantStockName,
             category: validatedData.variantStockCategory,
-            parentProduct: parentStock._id,
             isVariant: true,
             variantAttributes: {
               unit: validatedData.variantStockUnit,
@@ -311,42 +289,42 @@ const StockController = {
     try {
       const { sku } = req.params;
 
-      const { error, value: validatedData } =
-        VariantUpdateValidationSchema.validate(
-          req.body,
-          { stripUnknown: true } // Remove Unknown Fields
-        );
+      // const { error, value: validatedData } =
+      //   VariantUpdateValidationSchema.validate(
+      //     req.body,
+      //     { stripUnknown: true } // Remove Unknown Fields
+      //   );
 
-      if (error) {
-        // Create a detailed error message
-        const errorMessage = error.details.map((detail) => ({
-          field: detail.path.join("."),
-          message: detail.message,
-          type: detail.type,
-        }));
+      // if (error) {
+      //   // Create a detailed error message
+      //   const errorMessage = error.details.map((detail) => ({
+      //     field: detail.path.join("."),
+      //     message: detail.message,
+      //     type: detail.type,
+      //   }));
 
-        console.log("Error update stock validation:", errorMessage);
+      //   console.log("Error update stock validation:", errorMessage);
 
-        // Send HTTP 400 error with validation details
-        return next(
-          createHttpError(400, "Validation failed", {
-            errors: errorMessage,
-          })
-        );
-      }
+      //   // Send HTTP 400 error with validation details
+      //   return next(
+      //     createHttpError(400, "Validation failed", {
+      //       errors: errorMessage,
+      //     })
+      //   );
+      // }
 
-      await StockModel.findOneAndUpdate(
-        { sku },
-        {
-          status: validatedData.variantStatus,
-          name: validatedData.variantName,
-          category: validatedData.category,
-          capacity: validatedData.capacity,
-          quantity: validatedData.quantity,
-          sizeOrWeight: validatedData.sizeOrWeight,
-          unit: validatedData.unit,
-        }
-      );
+      // await StockModel.findOneAndUpdate(
+      //   { sku },
+      //   {
+      //     status: validatedData.variantStatus,
+      //     name: validatedData.variantName,
+      //     category: validatedData.category,
+      //     capacity: validatedData.capacity,
+      //     quantity: validatedData.quantity,
+      //     sizeOrWeight: validatedData.sizeOrWeight,
+      //     unit: validatedData.unit,
+      //   }
+      // );
 
       res.status(204).send();
     } catch (error) {
@@ -365,14 +343,14 @@ const StockController = {
       const stock = await StockModel.findOne({ sku });
 
       // First delete it's variant stocks if any
-      await StockModel.deleteMany(
-        { parentProduct: stock._id },
+      await StockModel.deleteMany({ parentStockObjectId: stock._id }, { session });
+
+      const deletedStock = await StockModel.deleteOne(
+        {
+          sku,
+        },
         { session }
       );
-
-      const deletedStock = await StockModel.deleteOne({
-        sku,
-      }, { session });
 
       await session.commitTransaction();
       session.endSession();

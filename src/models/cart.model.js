@@ -11,7 +11,8 @@ const ProductCartSchema = new mongoose.Schema(
     variantName: String,
     slug: String,
     productImage: String,
-    quantity: { type: Number, default: 1 },
+    quantity: { type: Number, min: 1, default: 1 },
+    availableQuantity: { type: Number },
     originalPrice: Number,
     discount: Number,
     discountPrice: Number,
@@ -28,7 +29,7 @@ const PackageCartSchema = new mongoose.Schema(
       unique: true,
       required: true,
     },
-    quantity: { type: String, default: 1 },
+    quantity: { type: String, min: 1, default: 1 },
   },
   {
     _id: false,

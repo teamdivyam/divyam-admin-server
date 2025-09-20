@@ -75,13 +75,13 @@ const ADD_NEW_PACKAGE = async (req, res, next) => {
 
         const prettyData = {
             pkg_id: PackageID,
-            name: reqData.name,
+            packageName: reqData.name,
             description: reqData.description,
-            packageListTextItems: reqData.packageListTextItems,
             capacity: reqData.capacity,
-            price: reqData.price,
+            discountPrice: reqData.discountPrice,
+            originalPrice: reqData.originalPrice,
+            discountPercent: reqData.discountPercent,
             policy: reqData.policy,
-            notes: reqData.notes,
             productBannerImgs: bannerImgIds,
             productImg: mainImgIds,
             rating: reqData.rating,
@@ -489,6 +489,8 @@ const GET_SINGLE_PACKAGE_FOR_USERS = async (req, res, next) => {
         return next(createHttpError(400, "Internal error.."))
     }
 }
+
+
 
 export {
     ADD_NEW_PACKAGE,

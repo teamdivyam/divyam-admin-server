@@ -4,6 +4,9 @@ const globalErrorHandler = (error, req, res, next) => {
         statusCode: error.status || 500,
         success: false,
         msg: error.message || 'Internal Server Error...',
+        message: error.message || "Internal Server Error",
+        validationError: error.validationError,
+        validationErrorList: error.validationErrorList,
     });
 }
 
