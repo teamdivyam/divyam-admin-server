@@ -796,7 +796,7 @@ const GetPackages = async (req, res, next) => {
 
     // Category filter
     if (tierId) {
-      filter.tierId = tierId;
+      filter.tierObjectId = tierId;
     }
 
     const packages = await PackageModel.find(filter)
