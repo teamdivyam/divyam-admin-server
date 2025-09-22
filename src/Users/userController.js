@@ -825,29 +825,40 @@ const GetPackages = async (req, res, next) => {
 const GetSinglePackage = async (req, res, next) => {
   try {
     const { packageSlug } = req.params;
-    const product = await PackageModel.findOne({ slug: packageSlug })
+    const packageData = await PackageModel.findOne({ slug: packageSlug })
       .select(
         `-_id packageName mainPackageImage packageBannerImages products 
-        description tags discounPrice originalPrice discountPercent rating capacity packageId isVisible policy`
+        description tags discounPrice originalPrice discountPercent rating 
+        capacity packageId isVisible policy`
       )
       .populate({
         path: "products.productObjectId",
         select: "-_id name slug mainImage variants",
         populate: {
           path: "variants.stock",
-          select:
-            "-_id sku name category quantity status variantAttributes remarks",
+          select: "-_id quantity variantAttributes",
         },
       })
       .lean();
 
-    if (!product) {
+    if (!packageData) {
       return next(createHttpError(404, "Product not found"));
     }
 
+    packageData.products.forEach((product) => {
+      product.productObjectId.variants = product.productObjectId.variants.find(
+        (variant) => variant.variantId === product.variantId
+      );
+    });
+
+    const productImages = Array.from(new Set(
+      packageData.products.map((product) => product.productObjectId.mainImage)
+    ));
+
     res.status(200).json({
       success: true,
-      product: product,
+      package: packageData,
+      productImages: productImages,
     });
   } catch (error) {
     console.error("error in get product:", error);
@@ -887,5 +898,5 @@ export {
   GetSingleProduct,
   GetPackages,
   GetTier,
-  GetSinglePackage
+  GetSinglePackage,
 };
