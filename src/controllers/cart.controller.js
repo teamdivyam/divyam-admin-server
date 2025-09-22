@@ -129,7 +129,7 @@ const CartController = {
         },
         0
       );
-      const cartSubTotalProduct = userCart.packageCartList.reduce(
+      const cartSubTotalProduct = userCart.productCartList.reduce(
         (sum, item) => {
           return sum + item.discountPrice * item.quantity;
         },
@@ -210,7 +210,7 @@ const CartController = {
         },
         0
       );
-      const cartSubTotalProduct = userCart.packageCartList.reduce(
+      const cartSubTotalProduct = userCart.productCartList.reduce(
         (sum, item) => {
           return sum + item.discountPrice * item.quantity;
         },
@@ -271,7 +271,7 @@ const CartController = {
         },
         0
       );
-      const cartSubTotalProduct = userCart.packageCartList.reduce(
+      const cartSubTotalProduct = userCart.productCartList.reduce(
         (sum, item) => {
           return sum + item.discountPrice * item.quantity;
         },
