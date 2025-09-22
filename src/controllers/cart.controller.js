@@ -8,7 +8,7 @@ import { generateCartID } from "../utils/generateID.js";
 const CartController = {
   getUserCart: async (req, res, next) => {
     try {
-      const userId = req.user?.id || "68c3cb85a9c5ba595313aa9a";
+      const userId = req.user?.id  //|| "68c3cb85a9c5ba595313aa9a";
       const cart = await CartModel.findOne({ userId: userId }).select(
         "-_id productCartList packageCartList subTotal total"
       );
@@ -25,7 +25,7 @@ const CartController = {
 
   addItemInCart: async (req, res, next) => {
     try {
-      const userId = req.user?.id; // "68c3cb85a9c5ba595313aa9a";
+      const userId = req.user?.id; // || "68c3cb85a9c5ba595313aa9a";
 
       const { error, value } = UpdateCartResponseBodySchema.validate(req.body, {
         stripUnkown: true,
@@ -59,7 +59,7 @@ const CartController = {
           return next(createHttpError(409, "Item in cart already existed!"));
         }
         userCart.packageCartList.push({
-          package: itemId,
+          packageId: itemId,
           quantity: quantity,
         });
 
