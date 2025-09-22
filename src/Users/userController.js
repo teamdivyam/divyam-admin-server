@@ -842,18 +842,23 @@ const GetSinglePackage = async (req, res, next) => {
       .lean();
 
     if (!packageData) {
-      return next(createHttpError(404, "Product not found"));
+      return next(createHttpError(404, "Package not found"));
     }
 
     packageData.products.forEach((product) => {
-      product.productObjectId.variants = product.productObjectId.variants.find(
-        (variant) => variant.variantId === product.variantId
-      );
+      if (product.productObjectId?.variants && product.productObjectId?.variants.length > 0) {
+        product.productObjectId.variants =
+          product.productObjectId.variants.find(
+            (variant) => variant.variantId === product.variantId
+          );
+      }
     });
 
-    const productImages = Array.from(new Set(
-      packageData.products.map((product) => product.productObjectId.mainImage)
-    ));
+    const productImages = Array.from(
+      new Set(
+        packageData.products.map((product) => product.productObjectId.mainImage)
+      )
+    );
 
     res.status(200).json({
       success: true,
