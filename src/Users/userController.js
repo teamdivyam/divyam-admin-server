@@ -707,7 +707,7 @@ const GetProducts = async (req, res, next) => {
       filter.category = category;
     }
 
-    const products = await ProductModel.find(filter)
+    const products = await ProductModel.find(filter, {"variants": {$slice: 1}})
       .select(
         "-_id productId name discount discountPrice originalPrice mainImage category tags status slug"
       )
