@@ -135,12 +135,12 @@ const CartController = {
         },
         0
       );
-      userCart.subTotal = Number(
-        cartSubTotalPackage.toFixed(2) + cartSubTotalProduct.toFixed(2)
-      );
-      userCart.total = Number(
-        cartSubTotalPackage.toFixed(2) + cartSubTotalProduct.toFixed(2)
-      );
+      userCart.subTotal =
+        Number(cartSubTotalPackage.toFixed(2)) +
+        Number(cartSubTotalProduct.toFixed(2));
+      userCart.total =
+        Number(cartSubTotalPackage.toFixed(2)) +
+        Number(cartSubTotalProduct.toFixed(2));
 
       await userCart.save();
 
@@ -216,12 +216,12 @@ const CartController = {
         },
         0
       );
-      userCart.subTotal = Number(
-        cartSubTotalPackage.toFixed(2) + cartSubTotalProduct.toFixed(2)
-      );
-      userCart.total = Number(
-        cartSubTotalPackage.toFixed(2) + cartSubTotalProduct.toFixed(2)
-      );
+      userCart.subTotal =
+        Number(cartSubTotalPackage.toFixed(2)) +
+        Number(cartSubTotalProduct.toFixed(2));
+      userCart.total =
+        Number(cartSubTotalPackage.toFixed(2)) +
+        Number(cartSubTotalProduct.toFixed(2));
 
       await userCart.save();
 
@@ -249,27 +249,6 @@ const CartController = {
         );
 
         userCart.packageCartList = filterPackageCartList;
-
-        const cartSubTotalPackage = userCart.packageCartList.reduce(
-          (sum, item) => {
-            return sum + item.discountPrice * item.quantity;
-          },
-          0
-        );
-        const cartSubTotalProduct = userCart.packageCartList.reduce(
-          (sum, item) => {
-            return sum + item.discountPrice * item.quantity;
-          },
-          0
-        );
-        userCart.subTotal = Number(
-          cartSubTotalPackage.toFixed(2) + cartSubTotalProduct.toFixed(2)
-        );
-        userCart.total = Number(
-          cartSubTotalPackage.toFixed(2) + cartSubTotalProduct.toFixed(2)
-        );
-
-        await userCart.save();
       } else if (itemType === "product" && variantId) {
         /** Cart Product with Variant */
         const filterProductCartList = userCart.productCartList.filter(
@@ -277,27 +256,6 @@ const CartController = {
         );
 
         userCart.productCartList = filterProductCartList;
-
-        const cartSubTotalPackage = userCart.packageCartList.reduce(
-          (sum, item) => {
-            return sum + item.discountPrice * item.quantity;
-          },
-          0
-        );
-        const cartSubTotalProduct = userCart.packageCartList.reduce(
-          (sum, item) => {
-            return sum + item.discountPrice * item.quantity;
-          },
-          0
-        );
-        userCart.subTotal = Number(
-          cartSubTotalPackage.toFixed(2) + cartSubTotalProduct.toFixed(2)
-        );
-        userCart.total = Number(
-          cartSubTotalPackage.toFixed(2) + cartSubTotalProduct.toFixed(2)
-        );
-
-        await userCart.save();
       } else {
         /** Cart Product with no Variant */
         const filterProductCartList = userCart.productCartList.filter(
@@ -305,28 +263,28 @@ const CartController = {
         );
 
         userCart.productCartList = filterProductCartList;
-
-        const cartSubTotalPackage = userCart.packageCartList.reduce(
-          (sum, item) => {
-            return sum + item.discountPrice * item.quantity;
-          },
-          0
-        );
-        const cartSubTotalProduct = userCart.packageCartList.reduce(
-          (sum, item) => {
-            return sum + item.discountPrice * item.quantity;
-          },
-          0
-        );
-        userCart.subTotal = Number(
-          cartSubTotalPackage.toFixed(2) + cartSubTotalProduct.toFixed(2)
-        );
-        userCart.total = Number(
-          cartSubTotalPackage.toFixed(2) + cartSubTotalProduct.toFixed(2)
-        );
-
-        await userCart.save();
       }
+
+      const cartSubTotalPackage = userCart.packageCartList.reduce(
+        (sum, item) => {
+          return sum + item.discountPrice * item.quantity;
+        },
+        0
+      );
+      const cartSubTotalProduct = userCart.packageCartList.reduce(
+        (sum, item) => {
+          return sum + item.discountPrice * item.quantity;
+        },
+        0
+      );
+      userCart.subTotal =
+        Number(cartSubTotalPackage.toFixed(2)) +
+        Number(cartSubTotalProduct.toFixed(2));
+      userCart.total =
+        Number(cartSubTotalPackage.toFixed(2)) +
+        Number(cartSubTotalProduct.toFixed(2));
+
+      await userCart.save();
 
       res.status(201).json({
         success: true,
