@@ -9,7 +9,7 @@ import PackageModel from "../models/package.model.js";
 const CartController = {
   getUserCart: async (req, res, next) => {
     try {
-      const userId = req.user?.id  //|| "68c3cb85a9c5ba595313aa9a";
+      const userId = req.user?.id; //|| "68c3cb85a9c5ba595313aa9a";
       const cart = await CartModel.findOne({ userId: userId }).select(
         "-_id productCartList packageCartList subTotal total"
       );
@@ -69,16 +69,8 @@ const CartController = {
           discountPrice: packageData.discountPrice,
           discount: packageData.discountPercent,
           slug: packageData.slug,
-          packageImage: packageData.mainPackageImage
+          packageImage: packageData.mainPackageImage,
         });
-
-        const cartSubTotal = userCart.packageCartList.reduce((sum, item) => {
-          return sum + item.discountPrice * item.quantity;
-        }, 0);
-        userCart.subTotal = Number(cartSubTotal.toFixed(2));
-        userCart.total = Number(cartSubTotal.toFixed(2));
-
-        await userCart.save();
       } else if (itemType === "product" && variantId) {
         /** Cart Product with Variant */
         const isVariantAlreadyInCart = userCart.productCartList.find(
@@ -108,14 +100,6 @@ const CartController = {
             discount: productVariant.discount,
             discountPrice: productVariant.discountPrice,
           });
-
-          const cartSubTotal = userCart.productCartList.reduce((sum, item) => {
-            return sum + item.discountPrice * item.quantity;
-          }, 0);
-          userCart.subTotal = Number(cartSubTotal.toFixed(2));
-          userCart.total = Number(cartSubTotal.toFixed(2));
-
-          await userCart.save();
         }
       } else {
         /** Cart Product with No Variant */
@@ -136,16 +120,30 @@ const CartController = {
             discount: product.discount,
             discountPrice: product.discountPrice,
           });
-
-          const cartSubTotal = userCart.productCartList.reduce((sum, item) => {
-            return sum + item.discountPrice * item.quantity;
-          }, 0);
-          userCart.subTotal = Number(cartSubTotal.toFixed(2));
-          userCart.total = Number(cartSubTotal.toFixed(2));
-
-          await userCart.save();
         }
       }
+
+      const cartSubTotalPackage = userCart.packageCartList.reduce(
+        (sum, item) => {
+          return sum + item.discountPrice * item.quantity;
+        },
+        0
+      );
+      const cartSubTotalProduct = userCart.packageCartList.reduce(
+        (sum, item) => {
+          return sum + item.discountPrice * item.quantity;
+        },
+        0
+      );
+      userCart.subTotal = Number(
+        cartSubTotalPackage.toFixed(2) + cartSubTotalProduct.toFixed(2)
+      );
+      userCart.total = Number(
+        cartSubTotalPackage.toFixed(2) + cartSubTotalProduct.toFixed(2)
+      );
+
+      await userCart.save();
+
       res.status(201).json({ success: true });
     } catch (error) {
       console.error("error add in cart:", error);
@@ -162,6 +160,9 @@ const CartController = {
 
       if (itemType === "package") {
         /** Cart Package */
+        // const editItemIndex = userCart.packageCartList.findIndex(
+        //   (item) => item.packageId === itemId
+        // );
       } else {
         /** Cart Product  */
         if (itemId && !variantId) {
@@ -195,7 +196,7 @@ const CartController = {
             userCart.productCartList[editItemIndex].quantity += quantity;
           } else {
             // Action type: decrement
-            if (quantity > userCart.productCartList[i].quantity) {
+            if (quantity > userCart.productCartList[editItemIndex].quantity) {
               return next(createHttpError(409, "Item in cart not existed!"));
             }
             userCart.productCartList[editItemIndex].quantity -= quantity;
@@ -203,11 +204,24 @@ const CartController = {
         }
       }
 
-      const cartSubTotal = userCart.productCartList.reduce((sum, item) => {
-        return sum + item.discountPrice * item.quantity;
-      }, 0);
-      userCart.subTotal = Number(cartSubTotal.toFixed(2));
-      userCart.total = Number(cartSubTotal.toFixed(2));
+      const cartSubTotalPackage = userCart.packageCartList.reduce(
+        (sum, item) => {
+          return sum + item.discountPrice * item.quantity;
+        },
+        0
+      );
+      const cartSubTotalProduct = userCart.packageCartList.reduce(
+        (sum, item) => {
+          return sum + item.discountPrice * item.quantity;
+        },
+        0
+      );
+      userCart.subTotal = Number(
+        cartSubTotalPackage.toFixed(2) + cartSubTotalProduct.toFixed(2)
+      );
+      userCart.total = Number(
+        cartSubTotalPackage.toFixed(2) + cartSubTotalProduct.toFixed(2)
+      );
 
       await userCart.save();
 
@@ -230,6 +244,32 @@ const CartController = {
 
       if (itemType === "package") {
         /** Cart Package */
+        const filterPackageCartList = userCart.packageCartList.filter(
+          (item) => item.packageId !== itemId
+        );
+
+        userCart.packageCartList = filterPackageCartList;
+
+        const cartSubTotalPackage = userCart.packageCartList.reduce(
+          (sum, item) => {
+            return sum + item.discountPrice * item.quantity;
+          },
+          0
+        );
+        const cartSubTotalProduct = userCart.packageCartList.reduce(
+          (sum, item) => {
+            return sum + item.discountPrice * item.quantity;
+          },
+          0
+        );
+        userCart.subTotal = Number(
+          cartSubTotalPackage.toFixed(2) + cartSubTotalProduct.toFixed(2)
+        );
+        userCart.total = Number(
+          cartSubTotalPackage.toFixed(2) + cartSubTotalProduct.toFixed(2)
+        );
+
+        await userCart.save();
       } else if (itemType === "product" && variantId) {
         /** Cart Product with Variant */
         const filterProductCartList = userCart.productCartList.filter(
@@ -238,11 +278,24 @@ const CartController = {
 
         userCart.productCartList = filterProductCartList;
 
-        const cartSubTotal = userCart.productCartList.reduce((sum, item) => {
-          return sum + item.discountPrice * item.quantity;
-        }, 0);
-        userCart.subTotal = Number(cartSubTotal.toFixed(2));
-        userCart.total = Number(cartSubTotal.toFixed(2));
+        const cartSubTotalPackage = userCart.packageCartList.reduce(
+          (sum, item) => {
+            return sum + item.discountPrice * item.quantity;
+          },
+          0
+        );
+        const cartSubTotalProduct = userCart.packageCartList.reduce(
+          (sum, item) => {
+            return sum + item.discountPrice * item.quantity;
+          },
+          0
+        );
+        userCart.subTotal = Number(
+          cartSubTotalPackage.toFixed(2) + cartSubTotalProduct.toFixed(2)
+        );
+        userCart.total = Number(
+          cartSubTotalPackage.toFixed(2) + cartSubTotalProduct.toFixed(2)
+        );
 
         await userCart.save();
       } else {
@@ -253,11 +306,24 @@ const CartController = {
 
         userCart.productCartList = filterProductCartList;
 
-        const cartSubTotal = userCart.productCartList.reduce((sum, item) => {
-          return sum + item.discountPrice * item.quantity;
-        }, 0);
-        userCart.subTotal = Number(cartSubTotal.toFixed(2));
-        userCart.total = Number(cartSubTotal.toFixed(2));
+        const cartSubTotalPackage = userCart.packageCartList.reduce(
+          (sum, item) => {
+            return sum + item.discountPrice * item.quantity;
+          },
+          0
+        );
+        const cartSubTotalProduct = userCart.packageCartList.reduce(
+          (sum, item) => {
+            return sum + item.discountPrice * item.quantity;
+          },
+          0
+        );
+        userCart.subTotal = Number(
+          cartSubTotalPackage.toFixed(2) + cartSubTotalProduct.toFixed(2)
+        );
+        userCart.total = Number(
+          cartSubTotalPackage.toFixed(2) + cartSubTotalProduct.toFixed(2)
+        );
 
         await userCart.save();
       }
