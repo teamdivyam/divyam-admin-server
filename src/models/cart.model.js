@@ -32,6 +32,8 @@ const PackageCartSchema = new mongoose.Schema(
     originalPrice: Number,
     discount: Number,
     discountPrice: Number,
+    slug: String,
+    packageImage: String,
   },
   {
     _id: false,
