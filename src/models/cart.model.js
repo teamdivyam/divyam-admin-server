@@ -29,6 +29,9 @@ const PackageCartSchema = new mongoose.Schema(
       required: true,
     },
     quantity: { type: String, min: 1, default: 1 },
+    originalPrice: Number,
+    discount: Number,
+    discountPrice: Number,
   },
   {
     _id: false,
