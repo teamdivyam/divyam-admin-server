@@ -4,6 +4,7 @@ import { UpdateCartResponseBodySchema } from "../Validators/cart.js";
 import ProductModel from "../models/product.model.js";
 import StockModel from "../models/stock.model.js";
 import { generateCartID } from "../utils/generateID.js";
+import PackageModel from "../models/package.model.js";
 
 const CartController = {
   getUserCart: async (req, res, next) => {
@@ -53,14 +54,20 @@ const CartController = {
       if (itemType === "package") {
         /** Cart Package */
         const isItemAlreadyInCart = userCart.packageCartList.find(
-          (item) => item.package === itemId
+          (item) => item.packageId === itemId
         );
         if (isItemAlreadyInCart) {
           return next(createHttpError(409, "Item in cart already existed!"));
         }
+
+        const packageData = await PackageModel.findOne({ packageId: itemId });
+
         userCart.packageCartList.push({
           packageId: itemId,
           quantity: quantity,
+          originalPrice: packageData.originalPrice,
+          discountPrice: packageData.discountPrice,
+          discount: packageData.discountPercent,
         });
 
         const cartSubTotal = userCart.packageCartList.reduce((sum, item) => {
