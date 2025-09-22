@@ -3,6 +3,7 @@ import CartModel from "../models/cart.model.js";
 import { UpdateCartResponseBodySchema } from "../Validators/cart.js";
 import ProductModel from "../models/product.model.js";
 import StockModel from "../models/stock.model.js";
+import { generateCartID } from "../utils/generateID.js";
 
 const CartController = {
   getUserCart: async (req, res, next) => {
@@ -24,7 +25,7 @@ const CartController = {
 
   addItemInCart: async (req, res, next) => {
     try {
-      const userId = req.user?.id || "68c3cb85a9c5ba595313aa9a";
+      const userId = req.user?.id; // "68c3cb85a9c5ba595313aa9a";
 
       const { error, value } = UpdateCartResponseBodySchema.validate(req.body, {
         stripUnkown: true,
@@ -45,7 +46,8 @@ const CartController = {
 
       let userCart = await CartModel.findOne({ userId: userId });
       if (!userCart) {
-        userCart = await CartModel.create({ userId: userId });
+        const cartId = generateCartID();
+        userCart = await CartModel.create({ userId: userId, cartId: cartId });
       }
 
       if (itemType === "package") {
@@ -60,7 +62,7 @@ const CartController = {
           package: itemId,
           quantity: quantity,
         });
-        
+
         const cartSubTotal = userCart.packageCartList.reduce((sum, item) => {
           return sum + item.discountPrice * item.quantity;
         }, 0);
@@ -80,7 +82,9 @@ const CartController = {
           const productVariant = product.variants.find(
             (variant) => variant.variantId === variantId
           );
-          const stock = await StockModel.findById(productVariant.stock).select("quantity");
+          const stock = await StockModel.findById(productVariant.stock).select(
+            "quantity"
+          );
 
           userCart.productCartList.push({
             productId: product.productId,
@@ -142,7 +146,7 @@ const CartController = {
 
   updateItemInCart: async (req, res, next) => {
     try {
-      const userId = req.user?.id || "68c3cb85a9c5ba595313aa9a";
+      const userId = req.user?.id; // "68c3cb85a9c5ba595313aa9a";
       const { itemType, itemId, variantId, quantity, action } = req.body;
 
       const userCart = await CartModel.findOne({ userId: userId });
@@ -210,7 +214,7 @@ const CartController = {
 
   deleteItemInCart: async (req, res, next) => {
     try {
-      const userId = req.user?.id || "68c3cb85a9c5ba595313aa9a";
+      const userId = req.user?.id; // "68c3cb85a9c5ba595313aa9a";
       const { itemType, itemId, variantId } = req.body;
 
       const userCart = await CartModel.findOne({ userId: userId });
