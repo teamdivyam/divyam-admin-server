@@ -26,7 +26,6 @@ const PackageCartSchema = new mongoose.Schema(
   {
     packageId: {
       type: String,
-      unique: true,
       required: true,
     },
     quantity: { type: String, min: 1, default: 1 },
