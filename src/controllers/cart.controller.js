@@ -68,6 +68,8 @@ const CartController = {
           originalPrice: packageData.originalPrice,
           discountPrice: packageData.discountPrice,
           discount: packageData.discountPercent,
+          slug: packageData.slug,
+          packageImage: packageData.mainPackageImage
         });
 
         const cartSubTotal = userCart.packageCartList.reduce((sum, item) => {
