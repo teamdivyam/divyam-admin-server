@@ -113,10 +113,10 @@ Route.get('/logout', authUser, LOGOUT_USER);
 Route.get('/products', GetProducts);
 Route.get('/products/:productSlug', GetSingleProduct);
 
-Route.get('/cart', CartController.getUserCart);
-Route.post('/cart', CartController.addItemInCart);
-Route.patch('/cart', CartController.updateItemInCart);
-Route.delete('/cart', CartController.deleteItemInCart);
+Route.get('/cart', authUser, CartController.getUserCart);
+Route.post('/cart', authUser, CartController.addItemInCart);
+Route.patch('/cart', authUser, CartController.updateItemInCart);
+Route.delete('/cart', authUser, CartController.deleteItemInCart);
 
 
 Route.get('/packages', GetPackages);
