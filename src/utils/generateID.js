@@ -6,3 +6,10 @@ export const generatePackageID = () => {
 
   return `PKG-${nanoid()}`;
 };
+
+export const generateCartID = () => {
+  const alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const nanoid = customAlphabet(alphabet, 10);
+
+  return `CRT-${nanoid()}`;
+};
