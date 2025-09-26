@@ -1,13 +1,12 @@
-import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { ProductSchema } from "../Validators/product.js";
 import ProductModel from "../models/product.model.js";
 import createHttpError from "http-errors";
-import { S3ClientConfig } from "../config/aws.js";
-import { v4 as uuidv4 } from "uuid";
 import generateProductID from "../utils/generateProductID.js";
 import slugify from "slugify";
 import generateVariantID from "../utils/generateVariantID.js";
 import StockModel from "../models/stock.model.js";
+import { multipleFileUploadS3 } from "../utils/uploadFileS3.js";
+import { deleteFileS3, deleteMultipleFilesS3 } from "../utils/deleteFileS3.js";
 
 const ProductController = {
   getProducts: async (req, res, next) => {
@@ -100,24 +99,15 @@ const ProductController = {
       }
 
       // Store product images in S3
+      const productImageFiles = req.files;
       let productImageURLs = [];
-      if (req.files) {
-        const uploadFilePromises = req.files.map(async (file) => {
-          const key = `UI/product-Img/${uuidv4()}-${file.originalname}`;
-          const params = {
-            Bucket: process.env.AWS_BUCKET_NAME,
-            Key: key,
-            Body: file.buffer,
-            ContentType: file.mimetype,
-          };
-          const command = new PutObjectCommand(params);
-          await S3ClientConfig.send(command);
-
-          return `https://assets.divyam.com/${key}`;
+      try {
+        productImageURLs = await multipleFileUploadS3({
+          filePath: "UI/product-image",
+          files: productImageFiles,
         });
-
-        const imageURLs = await Promise.all(uploadFilePromises);
-        productImageURLs.push(...imageURLs);
+      } catch (error) {
+        next(createHttpError(400, "Failed to upload file"));
       }
 
       // Generate product id
@@ -166,6 +156,12 @@ const ProductController = {
   deleteProduct: async (req, res, next) => {
     try {
       const { productId } = req.params;
+      const product = await ProductModel.findOne({ productId });
+
+      // Delete images in package in S3
+      await deleteFileS3(product.mainImage);
+      await deleteMultipleFilesS3(product.images);
+
       const deletedProduct = await ProductModel.deleteOne({ productId });
 
       if (deletedProduct.deletedCount === 0) {

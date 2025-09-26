@@ -190,7 +190,12 @@ AdminRoute.post(
 );
 AdminRoute.delete("/product/:productId", ProductController.deleteProduct);
 AdminRoute.get("/product-option", ProductController.getProductOption)
+
+
 // Package
+AdminRoute.get("/packages", isAdmin, PackageController.getPackage);
+AdminRoute.get("/packages/:packageSlug", isAdmin, PackageController.getSinglePackage);
+AdminRoute.get("/edit-package-data/:packageId", isAdmin, PackageController.getSinglePackageForEdit);
 AdminRoute.post(
   "/create-package",
   upload.fields([
@@ -199,6 +204,7 @@ AdminRoute.post(
   ]),
   PackageController.createPackage
 );
+AdminRoute.delete("/packages/:packageId", isAdmin, PackageController.deletePackage);
 
 // Tier
 AdminRoute.get("/tier", TierController.getTier);

@@ -6,8 +6,85 @@ import { S3ClientConfig } from "../config/aws.js";
 import { generatePackageID } from "../utils/generateID.js";
 import slugify from "slugify";
 import { v4 as uuidv4 } from "uuid";
+import { fileUploadS3, multipleFileUploadS3 } from "../utils/uploadFileS3.js";
+import { deleteFileS3, deleteMultipleFilesS3 } from "../utils/deleteFileS3.js";
 
 const PackageController = {
+  getPackage: async (req, res, next) => {
+    try {
+      const packages = await PackageModel.find({})
+        .select(`packageId packageName isVisible capacity discountPrice slug`)
+        .lean();
+
+      const totalPackages = await PackageModel.countDocuments();
+
+      res.status(200).json({
+        success: true,
+        packages: packages,
+        totalRows: totalPackages,
+      });
+    } catch (error) {
+      console.error("error in get package:", error);
+      next(createHttpError(500, "Internal Server Error"));
+    }
+  },
+
+  getSinglePackage: async (req, res, next) => {
+    try {
+      const { packageSlug } = req.params;
+
+      const packages = await PackageModel.find({ slug: packageSlug })
+        .select(
+          `packageName mainPackageImage packageBannerImages products description
+            tags discountPrice originalPrice discountPercent rating tierObjectId capacity`
+        )
+        .populate({
+          path: "products.productObjectId",
+        })
+        .populate({
+          path: "tierObjectId",
+          select: "tierName",
+        })
+        .lean();
+
+      res.status(200).json({
+        success: true,
+        packages: packages,
+      });
+    } catch (error) {
+      console.error("error in get single package:", error);
+      next(createHttpError(500, "Internal Server Error"));
+    }
+  },
+
+  getSinglePackageForEdit: async (req, res, next) => {
+    try {
+      const { packageId } = req.params;
+
+      const packageData = await PackageModel.findOne({ packageId: packageId })
+        .select(
+          `packageName mainPackageImage packageBannerImages products description
+            tags discountPrice originalPrice discountPercent rating tierObjectId capacity`
+        )
+        .populate({
+          path: "products.productObjectId",
+        })
+        .populate({
+          path: "tierObjectId",
+          select: "tierName",
+        })
+        .lean();
+
+      res.status(200).json({
+        success: true,
+        package: packageData,
+      });
+    } catch (error) {
+      console.error("error in get single package:", error);
+      next(createHttpError(500, "Internal Server Error"));
+    }
+  },
+
   createPackage: async (req, res, next) => {
     try {
       const {
@@ -23,8 +100,6 @@ const PackageController = {
         isVisible,
         policy,
       } = req.body;
-
-      console.log("reqbody:", req.body);
 
       // Validation Checking
       const { error, value: validatedData } = PackageSchema.validate(
@@ -63,48 +138,31 @@ const PackageController = {
           )
         );
       }
-      console.log("reqfiles:", req.files);
 
-      const packageMainImage = req.files.packageMainImage?.[0]; // single file
-      const packageFiles = req.files.packageBannerImage || []; // multiple files
+      const packageMainImageFile = req.files.packageMainImage?.[0]; // single file
+      const packageBannerImageFiles = req.files.packageBannerImage || []; // multiple files
 
       let packageMainImageURL;
-      if (!packageMainImage) {
-        return next(createHttpError(400, "Banner image is required"));
-      } else {
-        const bannerImageKey = `UI/package-main-image/${uuidv4()}-${
-          packageMainImage.originalname
-        }`;
-        const params = {
-          Bucket: process.env.AWS_BUCKET_NAME,
-          Key: bannerImageKey,
-          Body: packageMainImage.buffer,
-          ContentType: packageMainImage.mimetype,
-        };
-        const command = new PutObjectCommand(params);
-        await S3ClientConfig.send(command);
-
-        packageMainImageURL = `https://assets.divyam.com/${bannerImageKey}`;
-      }
-      
-      let packageBannerImageURLs = [];
-      if (packageFiles) {
-        const uploadFilePromises = packageFiles.map(async (file) => {
-          const key = `UI/package-banner-image/${uuidv4()}-${file.originalname}`;
-          const params = {
-            Bucket: process.env.AWS_BUCKET_NAME,
-            Key: key,
-            Body: file.buffer,
-            ContentType: file.mimetype,
-          };
-          const command = new PutObjectCommand(params);
-          await S3ClientConfig.send(command);
-
-          return `https://assets.divyam.com/${key}`;
+      try {
+        if (!packageMainImageFile) {
+          throw new Error("Package main image is not provided!");
+        }
+        packageMainImageURL = await fileUploadS3({
+          filePath: "UI/package-main-image",
+          file: packageMainImageFile,
         });
+      } catch (error) {
+        next(createHttpError(400, error.message));
+      }
 
-        const imageURLs = await Promise.all(uploadFilePromises);
-        packageBannerImageURLs.push(...imageURLs);
+      let packageBannerImageURLs = [];
+      try {
+        packageBannerImageURLs = await multipleFileUploadS3({
+          filePath: "UI/package-banner-image",
+          files: packageBannerImageFiles,
+        });
+      } catch (error) {
+        next(createHttpError(400, error.message, { message: error.message }));
       }
 
       // Generate product id
@@ -135,6 +193,32 @@ const PackageController = {
     } catch (error) {
       console.error("error in create package:", error);
       next(createHttpError(500, "Internal Server Error"));
+    }
+  },
+
+  deletePackage: async (req, res, next) => {
+    try {
+      const { packageId } = req.params;
+      const packageData = await PackageModel.findOne({ packageId });
+
+      // Delete images in package in S3
+      await deleteFileS3(packageData.mainPackageImage);
+      await deleteMultipleFilesS3(packageData.packageBannerImages);
+
+      const deletedPackage = await PackageModel.deleteOne({ packageId });
+
+      if (deletedPackage.deletedCount === 0) {
+        return res.status(404).send();
+      }
+
+      res.status(204).send("Package deleted");
+    } catch (error) {
+      console.error("error in delete package:", error);
+      next(
+        createHttpError(500, "Internal Server Error", {
+          message: error.message,
+        })
+      );
     }
   },
 };
