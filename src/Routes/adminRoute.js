@@ -231,7 +231,7 @@ AdminRoute.post("/tier", TierController.createTier);
 //-----------------Area Radius----------------------
 AdminRoute.get("/get-area-detail", GetAreaDetail);
 AdminRoute.post("/set-area-radius", setLocationRadius);
-AdminRoute.put("/change-location-radius", ChangeLocationRadius);
+AdminRoute.patch("/change-location-radius", ChangeLocationRadius);
 
 
 export default AdminRoute;
