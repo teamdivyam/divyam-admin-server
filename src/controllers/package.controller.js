@@ -64,7 +64,7 @@ const PackageController = {
       const packageData = await PackageModel.findOne({ packageId: packageId })
         .select(
           `packageName mainPackageImage packageBannerImages products description
-            tags discountPrice originalPrice discountPercent rating tierObjectId capacity`
+            tags discountPrice originalPrice discountPercent rating tierObjectId capacity isVisible`
         )
         .populate({
           path: "products.productObjectId",
@@ -196,6 +196,43 @@ const PackageController = {
     }
   },
 
+  updatePackage: async (req, res, next) => {
+    try {
+      const {
+        packageName,
+        products,
+        description,
+        tags,
+        discountPrice,
+        originalPrice,
+        discountPercent,
+        tierObjectId,
+        capacity,
+        isVisible,
+        policy,
+      } = req.body;
+
+      // Check slug name is unique and already exist or not
+      const slug = slugify(packageName, { lower: true, strict: true });
+      const slugAlreadyExists = await PackageModel.findOne({ slug });
+      if (slugAlreadyExists) {
+        return next(
+          createHttpError(
+            409,
+            "Choose different package name. It's already exits!"
+          )
+        );
+      }
+    } catch (error) {
+      console.error("error in update package:", error);
+      next(
+        createHttpError(500, "Internal Server Error", {
+          message: error.message,
+        })
+      );
+    }
+  },
+
   deletePackage: async (req, res, next) => {
     try {
       const { packageId } = req.params;
@@ -214,6 +251,46 @@ const PackageController = {
       res.status(204).send("Package deleted");
     } catch (error) {
       console.error("error in delete package:", error);
+      next(
+        createHttpError(500, "Internal Server Error", {
+          message: error.message,
+        })
+      );
+    }
+  },
+
+  deleteSingleImageFromPackage: async (req, res, next) => {
+    try {
+      const { packageId } = req.params;
+      const { imageType, imageURL } = req.query;
+
+      console.log("packageId", packageId);
+      console.log("imageType", imageType);
+      console.log("imageURL", imageURL);
+      if (imageType === "mainPackageImage") {
+        const deletedImage = await deleteFileS3(imageURL);
+        console.log("deletedImage:", deletedImage);
+        if (deletedImage.success) {
+          await PackageModel.updateOne(
+            { packageId },
+            { $set: { mainPackageImage: null } }
+          );
+        }
+      }
+      if (imageType === "packageBannerImages") {
+        const deletedImage = await deleteFileS3(imageURL);
+        if (deletedImage.success) {
+          console.log("deletedImage:", deletedImage);
+          await PackageModel.updateOne(
+            { packageId },
+            { $pull: { packageBannerImages: imageURL } }
+          );
+        }
+      }
+
+      res.status(204).send("Single Image of Package Deleted!");
+    } catch (error) {
+      console.error("error in delete single image from package:", error);
       next(
         createHttpError(500, "Internal Server Error", {
           message: error.message,

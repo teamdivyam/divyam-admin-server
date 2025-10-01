@@ -3,9 +3,12 @@ import rateLimit from "express-rate-limit";
 import authUser from "../middleware/authUser.js";
 import {
     ADD_NEW_ADDRESS,
+    CheckAvaibilityUnderRadius,
     DELETE_SINGLE_ADDRESS,
     GET_ALL_ADDRESS,
     GET_PRIMARY_ADDRESS,
+    GetLatLonByFullAddress,
+    GetLocationByCoordinates,
     GetPackages,
     GetProducts,
     GetSinglePackage,
@@ -118,6 +121,10 @@ Route.post('/cart', authUser, CartController.addItemInCart);
 Route.patch('/cart', authUser, CartController.updateItemInCart);
 Route.delete('/cart', authUser, CartController.deleteItemInCart);
 
+//--------------------------- Area Radius ----------------------------
+Route.get('/user/get-location-by-coordinates', authUser, GetLocationByCoordinates);
+Route.get('/user/get-lat-lon-address', authUser, GetLatLonByFullAddress);
+Route.get('/user/check-availability-under-radius', authUser, CheckAvaibilityUnderRadius);
 
 Route.get('/packages', GetPackages);
 Route.get('/packages/:packageSlug', GetSinglePackage);

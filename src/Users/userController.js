@@ -21,6 +21,7 @@ import ProductModel, { PRODUCT_CATEGORY } from "../models/product.model.js";
 import CartModel from "../models/cart.model.js";
 import PackageModel from "../models/package.model.js";
 import TierModel from "../models/tier.model.js";
+import AreaRadiusModel from "../models/arearadius.model.js";
 
 // Register User with Mobile Number..
 const RegisterUser = async (req, res, next) => {
@@ -707,7 +708,9 @@ const GetProducts = async (req, res, next) => {
       filter.category = category;
     }
 
-    const products = await ProductModel.find(filter, {"variants": {$slice: 1}})
+    const products = await ProductModel.find(filter, {
+      variants: { $slice: 1 },
+    })
       .select(
         "-_id productId name discount discountPrice originalPrice mainImage category tags status slug"
       )
@@ -846,7 +849,10 @@ const GetSinglePackage = async (req, res, next) => {
     }
 
     packageData.products.forEach((product) => {
-      if (product.productObjectId?.variants && product.productObjectId?.variants.length > 0) {
+      if (
+        product.productObjectId?.variants &&
+        product.productObjectId?.variants.length > 0
+      ) {
         product.productObjectId.variants =
           product.productObjectId.variants.find(
             (variant) => variant.variantId === product.variantId
@@ -884,6 +890,95 @@ const GetTier = async (req, res, next) => {
   }
 };
 
+const GetLocationByCoordinates = async (req, res) => {
+  try {
+    const { lat, lon } = req.query;
+    const apiKey = process.env.OLA_MAP_API_KEY;
+
+    const location = await fetch(
+      `https://api.olamaps.io/places/v1/reverse-geocode?latlng=${lat},${lon}&api_key=${apiKey}`
+    ).then((res) => res.json());
+
+    return res.status(200).json({ success: true, location });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+const GetLatLonByFullAddress = async (req, res) => {
+  try {
+    const { address } = req.query;
+
+    const apiKey = process.env.OLA_MAP_API_KEY;
+
+    const location = await fetch(
+      `https://api.olamaps.io/places/v1/geocode?address=${address}&api_key=${apiKey}`
+    ).then((res) => res.json());
+
+    return res.status(200).json({ success: true, location });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// Make this function async
+const CalculateDistance = async (userLat, userLon) => {
+  try {
+    // Get the admin-set location (center point & radius in km)
+    const location = await AreaRadiusModel.findOne({});
+    if (!location) throw new Error("No admin location found");
+
+    const { lat: centerLat, lon: centerLon, areaRadius } = location; // areaRadius is in km
+
+    // Convert degrees to radians
+    const toRad = (value) => (value * Math.PI) / 180;
+
+    const R = 6371; // Earth's radius in km
+    const φ1 = toRad(centerLat);
+    const φ2 = toRad(userLat);
+    const Δφ = toRad(userLat - centerLat);
+    const Δλ = toRad(userLon - centerLon);
+
+    const a =
+      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    const distance = R * c; // Distance in km
+
+    // Check if inside allowed radius
+    const isInside = distance <= areaRadius;
+
+    return { distance, areaRadius, isInside };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Controller
+const CheckAvaibilityUnderRadius = async (req, res) => {
+  try {
+    const { lat, lon } = req.query;
+
+    // Call the async function with await
+    const { distance, areaRadius, isInside } = await CalculateDistance(
+      lat,
+      lon
+    );
+
+    return res.status(200).json({
+      success: true,
+      distance: distance.toFixed(2), // km (2 decimals)
+      areaRadius, // km
+      isInside,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
 export {
   RegisterUser,
   VERIFY_OTP,
@@ -904,4 +999,7 @@ export {
   GetPackages,
   GetTier,
   GetSinglePackage,
+  GetLocationByCoordinates,
+  GetLatLonByFullAddress,
+  CheckAvaibilityUnderRadius,
 };

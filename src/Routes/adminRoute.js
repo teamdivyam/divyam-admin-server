@@ -69,6 +69,7 @@ import upload from "../utils/upload.js";
 import ProductController from "../controllers/product.controller.js";
 import PackageController from "../controllers/package.controller.js";
 import TierController from "../controllers/tier.controller.js";
+import { ChangeLocationRadius, GetAreaDetail, setLocationRadius } from "../controllers/arearadius.controller.js";
 
 const AdminRoute = express.Router();
 
@@ -189,25 +190,48 @@ AdminRoute.post(
   ProductController.createProduct
 );
 AdminRoute.delete("/product/:productId", ProductController.deleteProduct);
-AdminRoute.get("/product-option", ProductController.getProductOption)
-
+AdminRoute.get("/product-option", ProductController.getProductOption);
 
 // Package
 AdminRoute.get("/packages", isAdmin, PackageController.getPackage);
-AdminRoute.get("/packages/:packageSlug", isAdmin, PackageController.getSinglePackage);
-AdminRoute.get("/edit-package-data/:packageId", isAdmin, PackageController.getSinglePackageForEdit);
+AdminRoute.get(
+  "/packages/:packageSlug",
+  isAdmin,
+  PackageController.getSinglePackage
+);
+AdminRoute.get(
+  "/edit-package-data/:packageId",
+  isAdmin,
+  PackageController.getSinglePackageForEdit
+);
 AdminRoute.post(
   "/create-package",
+  isAdmin,
   upload.fields([
     { name: "packageMainImage", maxCount: 1 },
     { name: "packageBannerImage", maxCount: 10 },
   ]),
   PackageController.createPackage
 );
-AdminRoute.delete("/packages/:packageId", isAdmin, PackageController.deletePackage);
+AdminRoute.delete(
+  "/packages/:packageId",
+  isAdmin,
+  PackageController.deletePackage
+);
+AdminRoute.delete(
+  "/delete-package-image/:packageId",
+  isAdmin,
+  PackageController.deleteSingleImageFromPackage
+);
 
 // Tier
 AdminRoute.get("/tier", TierController.getTier);
 AdminRoute.post("/tier", TierController.createTier);
+
+//-----------------Area Radius----------------------
+AdminRoute.get("/get-area-detail", GetAreaDetail);
+AdminRoute.post("/set-area-radius", setLocationRadius);
+AdminRoute.put("/change-location-radius", ChangeLocationRadius);
+
 
 export default AdminRoute;

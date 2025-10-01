@@ -17,12 +17,10 @@ const DeleteObject = async (bucketName, objectKey) => {
             Key: objectKey
         });
         const response = await s3Client.send(command);
-        return response
-
-        // console.log("Object deleted successfully:", response);
-        console.log("Object deleted successfully:");
+        return response;
     } catch (error) {
         console.error("Error deleting object:", error.message);
+        throw new Error("Error in deleting file from S3");
     }
 };
 
