@@ -212,17 +212,109 @@ const PackageController = {
         policy,
       } = req.body;
 
+      console.log("req,body:", req.body);
+      console.log("req,file:", req.files);
+
+      const { packageId } = req.params;
+
       // Check slug name is unique and already exist or not
-      const slug = slugify(packageName, { lower: true, strict: true });
-      const slugAlreadyExists = await PackageModel.findOne({ slug });
-      if (slugAlreadyExists) {
-        return next(
-          createHttpError(
-            409,
-            "Choose different package name. It's already exits!"
-          )
-        );
+      if (packageName) {
+        const slug = slugify(packageName, { lower: true, strict: true });
+        const slugAlreadyExists = await PackageModel.findOne({ slug });
+        if (slugAlreadyExists) {
+          return next(
+            createHttpError(
+              409,
+              "Choose different package name. It's already exits!"
+            )
+          );
+        }
       }
+
+      const packageMainImageFile = req.files?.packageMainImage?.[0]; // single file
+      const packageBannerImageFiles = req.files?.packageBannerImage || []; // multiple files
+
+      let packageMainImageURL = undefined;
+      try {
+        if (packageMainImageFile) {
+          packageMainImageURL = await fileUploadS3({
+            filePath: "UI/package-main-image",
+            file: packageMainImageFile,
+          });
+        }
+      } catch (error) {
+        next(createHttpError(400, error.message));
+      }
+
+      let packageBannerImageURLs = [];
+      try {
+        if (packageBannerImageFiles.length > 0) {
+          const packageBannerImageURLFromS3 = await multipleFileUploadS3({
+            filePath: "UI/package-banner-image",
+            files: packageBannerImageFiles,
+          });
+          packageBannerImageURLs.push(...packageBannerImageURLFromS3);
+        }
+      } catch (error) {
+        next(createHttpError(400, error.message, { message: error.message }));
+      }
+
+      const packageData = await PackageModel.findOne({ packageId });
+
+      console.log("packageData:", packageData);
+
+      if (packageMainImageURL) {
+        packageData.mainPackageImage = packageMainImageURL;
+      }
+      if (packageBannerImageURLs.length > 0) {
+        packageData.packageBannerImages.push(...packageBannerImageURLs);
+      }
+      if (packageName) {
+        packageData.packageName = packageName;
+        const slug = slugify(packageName, { lower: true, strict: true });
+        packageData.slug = slug;
+      }
+      if (products?.length > 0) {
+        const parseProducts = JSON.parse(products);
+        packageData.products = parseProducts;
+      }
+      if (description) {
+        packageData.description = description;
+      }
+      if (tags) {
+        const parseTags = JSON.parse(tags);
+        if (parseTags.length > 0) {
+          packageData.tags = parseTags;
+        }
+      }
+      if (discountPrice) {
+        packageData.discountPrice = discountPrice;
+      }
+      if (originalPrice) {
+        packageData.originalPrice = originalPrice;
+      }
+      if (discountPercent) {
+        packageData.discountPercent = discountPercent;
+      }
+      if (tierObjectId) {
+        packageData.tierObjectId = tierObjectId;
+      }
+      if (capacity) {
+        packageData.capacity = capacity;
+      }
+      if (isVisible) {
+        packageData.isVisible = isVisible;
+      }
+      if (policy) {
+        packageData.policy = policy;
+      }
+
+      await packageData.save();
+
+      res.status(201).json({
+        success: true,
+        message: "Package update successfully",
+      });
     } catch (error) {
       console.error("error in update package:", error);
       next(
@@ -267,9 +359,8 @@ const PackageController = {
       console.log("packageId", packageId);
       console.log("imageType", imageType);
       console.log("imageURL", imageURL);
-      if (imageType === "mainPackageImage") {
+      if (imageType === "packageMainImage") {
         const deletedImage = await deleteFileS3(imageURL);
-        console.log("deletedImage:", deletedImage);
         if (deletedImage.success) {
           await PackageModel.updateOne(
             { packageId },
@@ -277,7 +368,7 @@ const PackageController = {
           );
         }
       }
-      if (imageType === "packageBannerImages") {
+      if (imageType === "packageBannerImage") {
         const deletedImage = await deleteFileS3(imageURL);
         if (deletedImage.success) {
           console.log("deletedImage:", deletedImage);

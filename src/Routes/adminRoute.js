@@ -69,7 +69,11 @@ import upload from "../utils/upload.js";
 import ProductController from "../controllers/product.controller.js";
 import PackageController from "../controllers/package.controller.js";
 import TierController from "../controllers/tier.controller.js";
-import { ChangeLocationRadius, GetAreaDetail, setLocationRadius } from "../controllers/arearadius.controller.js";
+import {
+  ChangeLocationRadius,
+  GetAreaDetail,
+  setLocationRadius,
+} from "../controllers/arearadius.controller.js";
 
 const AdminRoute = express.Router();
 
@@ -110,7 +114,7 @@ AdminRoute.get("/analytics", ADMIN_DASHBOARD_ANALYTICS);
 AdminRoute.post("/package", isAdmin, Upload.single("image"), ADD_NEW_PACKAGE);
 AdminRoute.get("/package", isAdmin, GET_ALL_PACKAGE);
 AdminRoute.get("/package/:PERMALINK", isAdmin, GET_SINGLE_PACKAGE);
-AdminRoute.patch("/package/:PERMALINK", isAdmin, UPDATE_PACKAGE);
+// AdminRoute.patch("/package/:PERMALINK", isAdmin, UPDATE_PACKAGE);
 AdminRoute.delete("/package/:PKG_ID", isAdmin, DELETE_SINGLE_PACKAGE);
 
 // Orders  (ALl THE ROUTES Manage by ADMIN..)
@@ -213,6 +217,15 @@ AdminRoute.post(
   ]),
   PackageController.createPackage
 );
+AdminRoute.patch(
+  "/package/:packageId",
+  isAdmin,
+  upload.fields([
+    { name: "packageMainImage", maxCount: 1 },
+    { name: "packageBannerImage", maxCount: 10 },
+  ]),
+  PackageController.updatePackage
+);
 AdminRoute.delete(
   "/packages/:packageId",
   isAdmin,
@@ -232,6 +245,5 @@ AdminRoute.post("/tier", TierController.createTier);
 AdminRoute.get("/get-area-detail", GetAreaDetail);
 AdminRoute.post("/set-area-radius", setLocationRadius);
 AdminRoute.patch("/change-location-radius", ChangeLocationRadius);
-
 
 export default AdminRoute;
