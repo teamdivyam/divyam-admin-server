@@ -802,7 +802,7 @@ const GetPackages = async (req, res, next) => {
       filter.tierObjectId = tierId;
     }
 
-    const packages = await PackageModel.find(filter)
+    const packages = await PackageModel.find({ ...filter, isVisible: true })
       .select(
         `-_id packageName mainPackageImage originalPrice discountPercent discountPrice description tags rating capacity slug`
       )
@@ -862,7 +862,11 @@ const GetSinglePackage = async (req, res, next) => {
 
     const productImages = Array.from(
       new Set(
-        packageData.products.map((product) => product.productObjectId.mainImage)
+        packageData.products.map((product) => {
+          if (product.productObjectId.mainImage) {
+            return product.productObjectId.mainImage;
+          }
+        })
       )
     );
 

@@ -12,11 +12,36 @@ import { deleteFileS3, deleteMultipleFilesS3 } from "../utils/deleteFileS3.js";
 const PackageController = {
   getPackage: async (req, res, next) => {
     try {
-      const packages = await PackageModel.find({})
+      const { page = 1, searchTerm, limit = 10, tierId, isVisible } = req.query;
+
+      // Build the filter object
+      const filter = {};
+
+      // Text search across name and tags
+      if (searchTerm) {
+        filter.$or = [
+          { packageName: { $regex: searchTerm, $options: "i" } },
+          { tags: { $regex: searchTerm, $options: "i" } },
+        ];
+      }
+
+      // Tier filter
+      if (tierId) {
+        filter.tierObjectId = tierId;
+      }
+
+      // Visibility filter
+      if (isVisible) {
+        filter.isVisible = isVisible
+      }
+
+      const packages = await PackageModel.find(filter)
         .select(`packageId packageName isVisible capacity discountPrice slug`)
+        .skip((page - 1) * limit) 
+        .limit(limit)
         .lean();
 
-      const totalPackages = await PackageModel.countDocuments();
+      const totalPackages = await PackageModel.countDocuments(filter);
 
       res.status(200).json({
         success: true,

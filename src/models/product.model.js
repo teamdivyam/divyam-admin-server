@@ -75,7 +75,7 @@ const ProductSchema = new mongoose.Schema({
   },
   originalPrice: {
     type: Number,
-    min: 0,
+    min: 0, 
     default: 0,
   },
   discount: {

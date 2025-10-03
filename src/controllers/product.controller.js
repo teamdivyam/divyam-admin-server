@@ -11,11 +11,31 @@ import { deleteFileS3, deleteMultipleFilesS3 } from "../utils/deleteFileS3.js";
 const ProductController = {
   getProducts: async (req, res, next) => {
     try {
-      const products = await ProductModel.find({});
+      const { page = 1, searchTerm, limit = 10 } = req.query;
+
+      // Build the filter object
+      const filter = {};
+
+      // Text search across name and tags
+      if (searchTerm) {
+        filter.$or = [
+          { name: { $regex: searchTerm, $options: "i" } },
+          { tags: { $regex: searchTerm, $options: "i" } },
+        ];
+      }
+
+      const products = await ProductModel.find(filter)
+        .select(`name slug productId category discountPrice mainImage`)
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean();
+
+      const totalRows = await ProductModel.countDocuments(filter);
 
       res.status(200).json({
         success: true,
         products: products,
+        totalRows: totalRows,
       });
     } catch (error) {
       console.error("error in get product:", error);

@@ -196,7 +196,7 @@ AdminRoute.post(
 AdminRoute.delete("/product/:productId", ProductController.deleteProduct);
 AdminRoute.get("/product-option", ProductController.getProductOption);
 
-// Package
+//-------------------------Package Routes--------------------------------
 AdminRoute.get("/packages", isAdmin, PackageController.getPackage);
 AdminRoute.get(
   "/packages/:packageSlug",
@@ -237,7 +237,7 @@ AdminRoute.delete(
   PackageController.deleteSingleImageFromPackage
 );
 
-// Tier
+//-------------------------Tier Routes--------------------------------
 AdminRoute.get("/tier", TierController.getTier);
 AdminRoute.post("/tier", TierController.createTier);
 
