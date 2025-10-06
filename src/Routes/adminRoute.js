@@ -186,8 +186,9 @@ AdminRoute.post("/create-stock", StockController.createStock);
 AdminRoute.patch("/stock/:sku", StockController.updateStock);
 AdminRoute.delete("/stock/:sku", StockController.deleteSingleStock);
 
-// Products
+//-------------------------Product Routes--------------------------------
 AdminRoute.get("/product", ProductController.getProducts);
+AdminRoute.get("/product/:productId", ProductController.getSingleProduct);
 AdminRoute.post(
   "/create-product",
   upload.array("images", 10),

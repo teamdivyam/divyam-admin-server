@@ -1,5 +1,5 @@
 import { ProductSchema } from "../Validators/product.js";
-import ProductModel from "../models/product.model.js";
+import ProductModel, { PRODUCT_CATEGORY } from "../models/product.model.js";
 import createHttpError from "http-errors";
 import generateProductID from "../utils/generateProductID.js";
 import slugify from "slugify";
@@ -25,20 +25,64 @@ const ProductController = {
       }
 
       const products = await ProductModel.find(filter)
-        .select(`name slug productId category discountPrice mainImage`)
+        .select(
+          `name slug mainImage productId category discountPrice mainImage originalPrice status`
+        )
         .skip((page - 1) * limit)
         .limit(limit)
         .lean();
 
       const totalRows = await ProductModel.countDocuments(filter);
 
+      const totalProductActive = await ProductModel.countDocuments({
+        status: "active",
+      });
+      const totalProductInactive = await ProductModel.countDocuments({
+        status: "inactive",
+      });
+      const categories = PRODUCT_CATEGORY;
+
       res.status(200).json({
         success: true,
         products: products,
         totalRows: totalRows,
+        totalProductActive: totalProductActive,
+        totalProductInactive: totalProductInactive,
+        categories: categories,
       });
     } catch (error) {
       console.error("error in get product:", error);
+      next(createHttpError(500, "Internal Server Error"));
+    }
+  },
+
+  getSingleProduct: async (req, res, next) => {
+    try {
+      const { productId } = req.params;
+
+      const product = await ProductModel.findOne({ productId })
+        .select(
+          `-_id productId slug name description category originalPrice 
+          discount discountPrice mainImage images tags status
+          variants.variantId variants.variantName variants.originalPrice 
+          variants.discount variants.discountPrice variants.status`
+        )
+        .populate({
+          path: "stock",
+          select: "-_id status sku quantity attributes variantAttributes"
+        })
+        .populate({
+          path: "variants.stock",
+          select: "-_id status sku quantity attributes variantAttributes"
+        })
+        .lean();
+
+      res.status(200).json({
+        success: true,
+        product: product,
+      });
+    } catch (error) {
+      console.error("error in get single product:", error);
       next(createHttpError(500, "Internal Server Error"));
     }
   },

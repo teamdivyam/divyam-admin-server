@@ -983,6 +983,42 @@ const CheckAvaibilityUnderRadius = async (req, res) => {
   }
 };
 
+const checkStockAvailable = async (req, res, next) => {
+  try {
+    const { cart = "no", startDate, endDate } = req.query;
+
+    const userId = req.user.id;
+
+    if (cart === "yes") {
+      const cart = await CartModel.findOne({ userId: userId });
+
+      const productCartList = cart.productCartList;
+    } else {
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, error: "Order creation failed" });
+  }
+};
+
+const checkSingleStockAvailable = async (req, res, next) => {
+  try {
+    const { cart = "no", startDate, endDate } = req.query;
+
+    const userId = req.user.id;
+
+    if (cart === "yes") {
+      const cart = await CartModel.findOne({ userId: userId });
+
+      const productCartList = cart.productCartList;
+    } else {
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, error: "Order creation failed" });
+  }
+};
+
 export {
   RegisterUser,
   VERIFY_OTP,
