@@ -4,6 +4,7 @@ import authUser from "../middleware/authUser.js";
 import {
     ADD_NEW_ADDRESS,
     CheckAvaibilityUnderRadius,
+    checkStockAvailable,
     DELETE_SINGLE_ADDRESS,
     GET_ALL_ADDRESS,
     GET_PRIMARY_ADDRESS,
@@ -116,6 +117,7 @@ Route.get('/logout', authUser, LOGOUT_USER);
 Route.get('/products', GetProducts);
 Route.get('/products/:productSlug', GetSingleProduct);
 
+//--------------------------- Cart ----------------------------
 Route.get('/cart', authUser, CartController.getUserCart);
 Route.post('/cart', authUser, CartController.addItemInCart);
 Route.patch('/cart', authUser, CartController.updateItemInCart);
@@ -130,4 +132,6 @@ Route.get('/packages', GetPackages);
 Route.get('/packages/:packageSlug', GetSinglePackage);
 Route.get('/tier', GetTier);
 
+//------------------------Check Availability---------------------
+Route.get('/check-stock-availability', authUser, checkStockAvailable);
 export default Route;

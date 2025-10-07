@@ -56,9 +56,9 @@ const PackageController = {
 
   getSinglePackage: async (req, res, next) => {
     try {
-      const { packageSlug } = req.params;
+      const { packageId } = req.params;
 
-      const packages = await PackageModel.find({ slug: packageSlug })
+      const packageData = await PackageModel.findOne({ packageId: packageId })
         .select(
           `packageName mainPackageImage packageBannerImages products description
             tags discountPrice originalPrice discountPercent rating tierObjectId capacity`
@@ -74,7 +74,7 @@ const PackageController = {
 
       res.status(200).json({
         success: true,
-        packages: packages,
+        package: packageData,
       });
     } catch (error) {
       console.error("error in get single package:", error);

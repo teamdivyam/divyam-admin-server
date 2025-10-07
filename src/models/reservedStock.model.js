@@ -2,9 +2,10 @@ import mongoose from "mongoose";
 
 const ReservedStockSchema = new mongoose.Schema(
   {
-    skuId: { type: String, required: true },
+    sku: { type: String, required: true },
     fromDate: { type: Date, required: true },
     toDate: { type: Date, required: true },
+    quantity: Number,
   },
   { timestamps: true }
 );

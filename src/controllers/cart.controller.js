@@ -26,7 +26,7 @@ const CartController = {
 
   addItemInCart: async (req, res, next) => {
     try {
-      const userId = req.user?.id; // || "68c3cb85a9c5ba595313aa9a";
+      const userId = req.user?.id //|| "68c3cb85a9c5ba595313aa9a";
 
       const { error, value } = UpdateCartResponseBodySchema.validate(req.body, {
         stripUnkown: true,
@@ -84,12 +84,13 @@ const CartController = {
             (variant) => variant.variantId === variantId
           );
           const stock = await StockModel.findById(productVariant.stock).select(
-            "quantity"
+            "sku quantity"
           );
 
           userCart.productCartList.push({
             productId: product.productId,
             variantId: productVariant.variantId,
+            sku: stock.sku,
             productName: product.name,
             variantName: productVariant.variantName,
             slug: product.slug,
@@ -110,9 +111,11 @@ const CartController = {
           return next(createHttpError(409, "Item in cart already existed!"));
         } else {
           const product = await ProductModel.findOne({ productId: itemId });
+          const stock = await StockModel.findById(product.stock)
 
           userCart.productCartList.push({
             productId: itemId,
+            sku: stock.sku,
             slug: product.slug,
             productImage: product.mainImage,
             quantity: quantity,

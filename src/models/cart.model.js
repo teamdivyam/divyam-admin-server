@@ -7,6 +7,7 @@ const ProductCartSchema = new mongoose.Schema(
       required: true,
     },
     variantId: String,
+    sku: String,
     productName: String,
     variantName: String,
     slug: String,

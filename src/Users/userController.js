@@ -22,6 +22,7 @@ import CartModel from "../models/cart.model.js";
 import PackageModel from "../models/package.model.js";
 import TierModel from "../models/tier.model.js";
 import AreaRadiusModel from "../models/arearadius.model.js";
+import { checkMultipleStocks } from "../services/user.js";
 
 // Register User with Mobile Number..
 const RegisterUser = async (req, res, next) => {
@@ -985,38 +986,39 @@ const CheckAvaibilityUnderRadius = async (req, res) => {
 
 const checkStockAvailable = async (req, res, next) => {
   try {
-    const { cart = "no", startDate, endDate } = req.query;
+    const { cart = "no", fromDate = new Date(), toDate = new Date() } = req.query;
 
-    const userId = req.user.id;
-
-    if (cart === "yes") {
-      const cart = await CartModel.findOne({ userId: userId });
-
-      const productCartList = cart.productCartList;
-    } else {
-    }
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ success: false, error: "Order creation failed" });
-  }
-};
-
-const checkSingleStockAvailable = async (req, res, next) => {
-  try {
-    const { cart = "no", startDate, endDate } = req.query;
-
-    const userId = req.user.id;
+    const userId = req.user?.id //|| "68c3cb85a9c5ba595313aa9a";
 
     if (cart === "yes") {
       const cart = await CartModel.findOne({ userId: userId });
 
-      const productCartList = cart.productCartList;
+      const stocks = cart.productCartList.map((product) => ({
+        sku: product.sku,
+        desiredQty: product.quantity,
+      }));
+
+      console.log("productCSKUs:", stocks);
+
+      const availabilityDetails = await checkMultipleStocks(
+        stocks,
+        fromDate,
+        toDate
+      );
+
+      res.status(200).json({
+        success: true,
+        availabilityDetails,
+      });
     } else {
+      const { packageId, productId } = req.query;
+
+      
     }
   } catch (error) {
     console.log(error);
     res.status(500).json({ success: false, error: "Order creation failed" });
-  }
+  } 
 };
 
 export {
@@ -1042,4 +1044,5 @@ export {
   GetLocationByCoordinates,
   GetLatLonByFullAddress,
   CheckAvaibilityUnderRadius,
+  checkStockAvailable,
 };

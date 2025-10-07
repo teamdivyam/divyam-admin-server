@@ -200,7 +200,7 @@ AdminRoute.get("/product-option", ProductController.getProductOption);
 //-------------------------Package Routes--------------------------------
 AdminRoute.get("/packages", isAdmin, PackageController.getPackage);
 AdminRoute.get(
-  "/packages/:packageSlug",
+  "/packages/:packageId",
   isAdmin,
   PackageController.getSinglePackage
 );
