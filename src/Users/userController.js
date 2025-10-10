@@ -988,7 +988,7 @@ const checkStockAvailable = async (req, res, next) => {
   try {
     const { cart = "no", fromDate = new Date(), toDate = new Date() } = req.query;
 
-    const userId = req.user?.id //|| "68c3cb85a9c5ba595313aa9a";
+    const userId = req.user?.id || "68c3cb85a9c5ba595313aa9a";
 
     if (cart === "yes") {
       const cart = await CartModel.findOne({ userId: userId });
@@ -998,7 +998,7 @@ const checkStockAvailable = async (req, res, next) => {
         desiredQty: product.quantity,
       }));
 
-      console.log("productCSKUs:", stocks);
+      console.log("productSKUs:", stocks);
 
       const availabilityDetails = await checkMultipleStocks(
         stocks,

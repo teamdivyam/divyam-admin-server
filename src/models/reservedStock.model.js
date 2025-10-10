@@ -6,6 +6,7 @@ const ReservedStockSchema = new mongoose.Schema(
     fromDate: { type: Date, required: true },
     toDate: { type: Date, required: true },
     quantity: Number,
+    orderId: { type: mongoose.Schema.Types.ObjectId, ref: "Order" },
   },
   { timestamps: true }
 );

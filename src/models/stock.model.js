@@ -1,63 +1,67 @@
 import mongoose from "mongoose";
 
-export const CATEGORY = {
-  COOKING: "COOKING",
-  DINING: "DINING",
-  SERVING: "SERVING",
-  DECORATIVE: "DECORATIVE",
-  OTHERS: "OTHERS",
+export const Category = {
+  cooking: "cooking",
+  dining: "dining",
+  serving: "serving",
+  decoration: "decoration",
+  others: "others",
 };
 
-export const UNITS = {
-  LITRE: "lt",
-  KILOGRAM: "kg",
-  CENTIMETRE: "cm",
-  INCH: "inch",
-};
-
-export const STOCK_STATUS = {
+export const StockStatus = {
   active: "active",
   inactive: "inactive",
 };
 
+export const SizeUnit = {
+  inch: "inch",
+  cm: "cm",
+  mm: "mm",
+};
+
+export const WeightUnit = {
+  kg: "kg",
+  gram: "gram",
+};
+
+export const CapacityUnit = {
+  ltr: "ltr",
+  ml: "ml"
+}
+
 const StockSchema = new mongoose.Schema(
   {
+    parentStockId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Stock",
+    },
     sku: { type: String, unique: true, required: true },
     name: { type: String, required: true },
     category: {
       type: String,
-      enum: Object.values(CATEGORY),
-      default: "OTHERS",
+      enum: Object.values(Category),
+      default: Category.others,
     },
-    quantity: { type: Number },
+    quantity: Number,
     status: {
       type: String,
-      enum: Object.values(STOCK_STATUS),
-      default: STOCK_STATUS.active,
-    },
-    parentStockObjectId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Stock",
-      default: null,
+      enum: Object.values(StockStatus),
+      default: StockStatus.active,
     },
     isVariant: { type: Boolean, default: false },
-    variantAttributes: {
-      unit: { type: String, enum: Object.values(UNITS) },
-      sizeOrWeight: String,
-      capacity: Number,
-    },
     attributes: {
-      unit: { type: String, enum: Object.values(UNITS) },
-      sizeOrWeight: String,
-      capacity: Number,
+      weightUnit: { type: String, enum: Object.values(WeightUnit) },
+      sizeUnit: { type: String, enum: Object.values(SizeUnit) },
+      capacityUnit: { type: String, enum: Object.values(CapacityUnit) },
+      weight: String,
+      size: String,
+      capacity: String,
     },
-    remarks: {
-      type: String,
-    },
+    guestCapacity: Number,
+    remarks: String,
   },
   {
     timestamps: true,
-    versionKey: false,
   }
 );
 

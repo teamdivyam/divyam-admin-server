@@ -55,7 +55,7 @@ export const checkMultipleStocks = async (stocks, fromDate, toDate) => {
       },
     },
   ]);
-
+  console.log("reservations:", reservations);
   // Fetch stock details if needed
   const stocksData = await StockModel.find({ sku: { $in: stockSKUs } }).lean();
 

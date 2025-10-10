@@ -7,6 +7,8 @@ import generateVariantID from "../utils/generateVariantID.js";
 import StockModel from "../models/stock.model.js";
 import { multipleFileUploadS3 } from "../utils/uploadFileS3.js";
 import { deleteFileS3, deleteMultipleFilesS3 } from "../utils/deleteFileS3.js";
+import { generateSKU } from "../utils/generateID.js";
+import CategoryModel from "../models/category.model.js";
 
 const ProductController = {
   getProducts: async (req, res, next) => {
@@ -69,11 +71,11 @@ const ProductController = {
         )
         .populate({
           path: "stock",
-          select: "-_id status sku quantity attributes variantAttributes"
+          select: "-_id status sku quantity attributes variantAttributes",
         })
         .populate({
           path: "variants.stock",
-          select: "-_id status sku quantity attributes variantAttributes"
+          select: "-_id status sku quantity attributes variantAttributes",
         })
         .lean();
 
@@ -215,7 +217,105 @@ const ProductController = {
       next(createHttpError(500, "Internal Server Error"));
     }
   },
-  updateProduct: async (req, res, next) => {},
+
+  // createProduct: async (req, res, next) => {
+  //   try {
+  //     const {
+  //       name,
+  //       description,
+  //       categoryId, // Object ID
+  //       attributes, // JSON format
+  //       tags, // JSON format
+  //     } = req.body;
+
+  //     console.log("req.boyd:", req.body);
+
+  //     /** Checking slug of product already exist or not */
+  //     const slug = slugify(name, { lower: true, strict: true });
+  //     const isSlugAlreadyExists = await ProductModel.findOne({ slug });
+  //     if (isSlugAlreadyExists) {
+  //       return next(
+  //         createHttpError(
+  //           409,
+  //           "Choose different product name. It's already exits!"
+  //         )
+  //       );
+  //     }
+
+  //     // Body validation checking
+  //     const { error, value: validatedData } = ProductSchema.validate(
+  //       {
+  //         name: name,
+  //         description: description,
+  //         categoryId: categoryId,
+  //         attributes: JSON.parse(attributes),
+  //         tags: JSON.parse(tags),
+  //       },
+  //       { stripUnknown: true } // Remove Unknown Fields
+  //     );
+  //     if (error) {
+  //       const errorMessage = error.details.map((detail) => ({
+  //         field: detail.path.join("."),
+  //         message: detail.message,
+  //         type: detail.type,
+  //       }));
+  //       return next(
+  //         createHttpError(400, "Validation failed", {
+  //           errors: errorMessage,
+  //         })
+  //       );
+  //     }
+
+  //     console.log("validatedData:", validatedData);
+
+  //     /**
+  //      * Store product image in S3 and
+  //      * Retreive URL image and store in db
+  //      */
+  //     const productImageFiles = req.files;
+  //     let productImageURLs = [];
+  //     try {
+  //       productImageURLs = await multipleFileUploadS3({
+  //         filePath: "UI/product-image",
+  //         files: productImageFiles,
+  //       });
+  //     } catch (error) {
+  //       next(createHttpError(400, "Failed to upload file"));
+  //     }
+
+  //     // Generate sku
+  //     // const category = await CategoryModel.findById(validatedData.categoryId);
+  //     const category = await CategoryModel.find({});
+  //     console.log(category);
+  //     const sku = generateSKU(category.name);
+
+  //     await ProductModel.create({
+  //       sku: sku,
+  //       slug: slug,
+  //       name: validatedData.name,
+  //       description: validatedData.description,
+  //       categoryId: validatedData.categoryId,
+  //       tags: validatedData.tags,
+  //       attributes: {
+  //         material: validatedData.attributes.material,
+  //         brand: validatedData.attributes.brand,
+  //       },
+  //       images: productImageURLs,
+  //     });
+
+  //     res.status(201).json({
+  //       success: true,
+  //       message: "New Product Created",
+  //     });
+  //   } catch (error) {
+  //     console.error("error in create product:", error);
+  //     next(createHttpError(500, "Internal Server Error"));
+  //   }
+  // },
+
+  // createProductVariant: async (req, res, next) => {},
+
+  // updateProduct: async (req, res, next) => {},
 
   deleteProduct: async (req, res, next) => {
     try {

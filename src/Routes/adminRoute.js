@@ -74,6 +74,7 @@ import {
   GetAreaDetail,
   setLocationRadius,
 } from "../controllers/arearadius.controller.js";
+import CategoryController from "../controllers/category.controller.js";
 
 const AdminRoute = express.Router();
 
@@ -246,5 +247,12 @@ AdminRoute.post("/tier", TierController.createTier);
 AdminRoute.get("/get-area-detail", GetAreaDetail);
 AdminRoute.post("/set-area-radius", setLocationRadius);
 AdminRoute.patch("/change-location-radius", ChangeLocationRadius);
+
+//-------------------------Category Routes--------------------------------
+AdminRoute.get("/category", CategoryController.getCategory);
+AdminRoute.post("/category", CategoryController.createCategory);
+AdminRoute.patch("/category", CategoryController.updateCategory);
+AdminRoute.delete("/category", CategoryController.deleteCategory);
+
 
 export default AdminRoute;

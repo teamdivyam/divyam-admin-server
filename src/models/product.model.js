@@ -115,3 +115,30 @@ const ProductSchema = new mongoose.Schema({
 const ProductModel = mongoose.model("Product", ProductSchema);
 
 export default ProductModel;
+
+
+// import mongoose from "mongoose";
+
+// export const ProductStatus = {
+//   active: "active",
+//   inactive: "inactive",
+// }
+
+// const ProductSchema = new mongoose.Schema(
+//   {
+//     sku: { type: String, required: true, unique: true, index: true },
+//     slug: { type: String, required: true, unique: true, index: true },
+//     name: { type: String, min: 4, max: 100 },
+//     description: { type: String },
+//     categoryId: { type: mongoose.Schema.Types.ObjectId, required: true },
+//     variants: [{ type: mongoose.Schema.Types.ObjectId, ref: "Variant" }],
+//     tags: [{ type: String, unique: true }],
+//     attributes: { material: String, brand: String },
+//     images: [{ type: String }],
+//     status: { type: String, enum: Object.values(ProductStatus) },
+//   },
+//   { timestamps: true }
+// );
+
+// const ProductModel = mongoose.model("Product", ProductSchema);
+// export default ProductModel;

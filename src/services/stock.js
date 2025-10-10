@@ -1,4 +1,4 @@
-import StockModel, { CATEGORY } from "../models/stock.model.js";
+import StockModel, { Category } from "../models/stock.model.js";
 import generateStockId from "../utils/generateStockID.js";
 
 export const getTotalStocks = async () => {
@@ -46,10 +46,8 @@ export const createStockSingleVariant = async (stock) => {
 
         const newStock = await StockModel.create({
             sku: sku,
-            category: stock.category || CATEGORY.OTHERS,
-            subcategory: stock.subcategory || null,
+            category: stock.category || Category.others,
             tags: stock.tags || [],
-
             name: stock.name,
             description: stock.description || null,
             brand: stock.brand || null,

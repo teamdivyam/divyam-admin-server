@@ -41,7 +41,7 @@ const StockController = {
 
       // Variant stock of stock
       const variantStock = await StockModel.find({
-        parentStockObjectId: stock._id,
+        parentStockId: stock._id,
       }).lean();
 
       // Total quantity of stock
@@ -99,10 +99,9 @@ const StockController = {
 
         if (await checkStockAlreadyExists(validatedData.name)) {
           return next(
-            createHttpError(
-              409,
-              `${validatedData.name} name stock already existed`
-            )
+            createHttpError(409, {
+              message: `${validatedData.name} name stock already existed`,
+            })
           );
         }
 
@@ -114,10 +113,15 @@ const StockController = {
           category: validatedData.category,
           quantity: validatedData.quantity,
           attributes: {
-            unit: validatedData.unit,
-            sizeOrWeight: validatedData.sizeOrWeight,
+            weightUnit: validatedData.weightUnit,
+            sizeUnit: validatedData.sizeUnit,
+            capacitytUnit: validatedData.capacityUnit,
+            weight: validatedData.weight,
+            size: validatedData.size,
             capacity: validatedData.capacity,
           },
+          guestCapacity: validatedData.guestCapacity,
+          remarks: validatedData.remarks,
         });
 
         return res.status(201).json({ message: "New stock created" });
@@ -148,16 +152,21 @@ const StockController = {
           );
 
           await StockModel.create({
+            parentStockId: validatedData.parentStockId,
             sku: skuVarientStock,
             name: validatedData.variantStockName,
             category: validatedData.variantStockCategory,
-            parentStockObjectId: validatedData.parentStockId,
             isVariant: true,
-            variantAttributes: {
-              unit: validatedData.variantStockUnit,
-              sizeOrWeight: validatedData.variantSizeOrWeight,
+            attributes: {
+              weightUnit: validatedData.variantStockWeighUnit,
+              sizeUnit: validatedData.variantStockSizeUnit,
+              capacityUnit: validatedData.variantStockCapacityUnit,
+              weight: validatedData.variantStockWeight,
+              size: validatedData.variantStockSize,
               capacity: validatedData.variantStockCapacity,
             },
+            guestCapacity: validatedData.variantStockGuestCapacity,
+            remarks: validatedData.variantRemarks,
             quantity: validatedData.variantStockQuantity,
           });
 
@@ -201,21 +210,27 @@ const StockController = {
           if (await checkStockAlreadyExists(validatedData.variantStockName)) {
             return next(createHttpError(409, "Variant Stock already existed"));
           }
+
           const skuVarientStock = generateStockId(
             validatedData.variantStockCategory
           );
 
           await StockModel.create({
-            parentStockObjectId: parentStock._id,
+            parentStockId: parentStock._id,
             sku: skuVarientStock,
             name: validatedData.variantStockName,
             category: validatedData.variantStockCategory,
             isVariant: true,
-            variantAttributes: {
-              unit: validatedData.variantStockUnit,
-              sizeOrWeight: validatedData.variantSizeOrWeight,
+            attributes: {
+              weightUnit: validatedData.variantStockWeighUnit,
+              sizeUnit: validatedData.variantStockSizeUnit,
+              capacityUnit: validatedData.variantStockCapacityUnit,
+              weight: validatedData.variantStockWeight,
+              size: validatedData.variantStockSize,
               capacity: validatedData.variantStockCapacity,
             },
+            guestCapacity: validatedData.variantStockGuestCapacity,
+            remarks: validatedData.variantRemarks,
             quantity: validatedData.variantStockQuantity,
           });
 
@@ -226,7 +241,7 @@ const StockController = {
         }
       }
     } catch (error) {
-      console.error("error in getting single stock:", error);
+      console.error("error in creating single stock:", error);
       next(createHttpError(500, "Internal Server Error"));
     }
   },
@@ -343,7 +358,10 @@ const StockController = {
       const stock = await StockModel.findOne({ sku });
 
       // First delete it's variant stocks if any
-      await StockModel.deleteMany({ parentStockObjectId: stock._id }, { session });
+      await StockModel.deleteMany(
+        { parentStockObjectId: stock._id },
+        { session }
+      );
 
       const deletedStock = await StockModel.deleteOne(
         {

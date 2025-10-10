@@ -53,3 +53,33 @@ export const ProductSchema = Joi.object({
     })
   ),
 });
+// export const ProductSchema = Joi.object({
+//   name: Joi.string().trim().required().messages({
+//     "string.empty": "Product name is required",
+//   }),
+
+//   description: Joi.string().trim().required().messages({
+//     "string.empty": "Description is required",
+//   }),
+
+//   categoryId: Joi.string()
+//     .regex(/^[0-9a-fA-F]{24}$/) // MongoDB ObjectId
+//     .required()
+//     .messages({
+//       "string.pattern.base": "Stock must be a valid ObjectId",
+//       "any.required": "Stock is required",
+//     }),
+
+//   attributes: Joi.object({
+//     material: Joi.string(),
+//     brand: Joi.string(),
+//   }),
+
+//   tags: Joi.array().items(Joi.string()).default([]),
+// });
+
+// export const ProductChangeStatusSchema = Joi.object({
+//   status: Joi.string()
+//     .valid(...Object.values(PRODUCT_STATUS))
+//     .default(PRODUCT_STATUS.active),
+// });

@@ -13,3 +13,10 @@ export const generateCartID = () => {
 
   return `CRT-${nanoid()}`;
 };
+
+export const generateSKU = (categoryName) => {
+  const alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const nanoid = customAlphabet(alphabet, 6);
+
+  return `${categoryName.slice(0, 3)}-${nanoid()}`;
+};

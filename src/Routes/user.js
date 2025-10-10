@@ -133,5 +133,5 @@ Route.get('/packages/:packageSlug', GetSinglePackage);
 Route.get('/tier', GetTier);
 
 //------------------------Check Availability---------------------
-Route.get('/check-stock-availability', authUser, checkStockAvailable);
+Route.get('/check-stock-availability', checkStockAvailable);
 export default Route;
