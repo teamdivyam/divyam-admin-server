@@ -158,7 +158,7 @@ const StockController = {
             category: validatedData.variantStockCategory,
             isVariant: true,
             attributes: {
-              weightUnit: validatedData.variantStockWeighUnit,
+              weightUnit: validatedData.variantStockWeightUnit,
               sizeUnit: validatedData.variantStockSizeUnit,
               capacityUnit: validatedData.variantStockCapacityUnit,
               weight: validatedData.variantStockWeight,
@@ -222,7 +222,7 @@ const StockController = {
             category: validatedData.variantStockCategory,
             isVariant: true,
             attributes: {
-              weightUnit: validatedData.variantStockWeighUnit,
+              weightUnit: validatedData.variantStockWeightUnit,
               sizeUnit: validatedData.variantStockSizeUnit,
               capacityUnit: validatedData.variantStockCapacityUnit,
               weight: validatedData.variantStockWeight,
