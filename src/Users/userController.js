@@ -751,7 +751,7 @@ const GetSingleProduct = async (req, res, next) => {
       .populate({
         path: "variants.stock",
         select:
-          "-_id sku name category quantity status variantAttributes remarks",
+          "-_id sku name category quantity status attributes remarks guestCapacity",
       })
       .lean();
 
