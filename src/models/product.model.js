@@ -20,7 +20,7 @@ const VariantSchema = new mongoose.Schema(
       ref: "Stock",
       required: true,
     },
-    variantId: { type: String, unique: true, required: true },
+    variantId: { type: String, unique: true, sparse: true },
     variantName: String,
     originalPrice: {
       type: Number,
