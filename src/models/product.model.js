@@ -110,6 +110,7 @@ const ProductSchema = new mongoose.Schema({
       default: [],
     },
   ],
+  rental: Boolean
 });
 
 const ProductModel = mongoose.model("Product", ProductSchema);

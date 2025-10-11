@@ -1,5 +1,5 @@
 import createHttpError from "http-errors";
-import StockModel from "../models/stock.model.js";
+import StockModel, { Category } from "../models/stock.model.js";
 import {
   // VariantUpdateValidationSchema,
   AddNewStockSchema,
@@ -9,7 +9,9 @@ import {
   checkStockAlreadyExists,
   createStockSingleVariant,
   getAllStocks,
+  getStockQuantity,
   getTotalStocks,
+  getVariantStockQuantity,
 } from "../services/stock.js";
 import generateStockId from "../utils/generateStockID.js";
 import mongoose from "mongoose";
@@ -17,15 +19,23 @@ import mongoose from "mongoose";
 const StockController = {
   getStock: async (req, res, next) => {
     try {
-      const [stocks, totalStocks] = await Promise.all([
+      const [stocks, totalStocks, totalVariantStocks] = await Promise.all([
         getAllStocks(),
-        getTotalStocks(),
+        getStockQuantity(),
+        getVariantStockQuantity()
       ]);
+
+      const category = {
+        values: Object.values(Category),
+        totalCategory: Object.values(Category).length,
+      }
 
       res.status(200).json({
         success: true,
         stocks: stocks,
         totalStocks: totalStocks,
+        totalVariantStocks: totalVariantStocks,
+        category: category
       });
     } catch (error) {
       console.error("error in getting stock:", error);
@@ -328,18 +338,26 @@ const StockController = {
       //   );
       // }
 
-      // await StockModel.findOneAndUpdate(
-      //   { sku },
-      //   {
-      //     status: validatedData.variantStatus,
-      //     name: validatedData.variantName,
-      //     category: validatedData.category,
-      //     capacity: validatedData.capacity,
-      //     quantity: validatedData.quantity,
-      //     sizeOrWeight: validatedData.sizeOrWeight,
-      //     unit: validatedData.unit,
-      //   }
-      // );
+      const validatedData = req.body;
+
+      await StockModel.findOneAndUpdate(
+        { sku },
+        {
+          status: validatedData.variantStatus,
+          name: validatedData.variantName,
+          category: validatedData.category,
+          guestCapacity: validatedData.guestCapacity,
+          quantity: validatedData.quantity,
+          attributes: {
+            weightUnit: validatedData.weightUnit,
+            sizeUnit: validatedData.sizeUnit,
+            capacityUnit: validatedData.capacityUnit,
+            weight: validatedData.weight,
+            size: validatedData.size,
+            capacity: validatedData.capacity,
+          }
+        }
+      );
 
       res.status(204).send();
     } catch (error) {
