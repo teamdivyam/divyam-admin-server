@@ -854,7 +854,7 @@ const GetSinglePackage = async (req, res, next) => {
       return next(createHttpError(404, "Package not found"));
     }
 
-    packageData.products.forEach((product) => {
+    packageData.products = packageData.products.map((product) => {
       if (
         product.productObjectId?.variants &&
         product.productObjectId?.variants.length > 0
@@ -863,6 +863,7 @@ const GetSinglePackage = async (req, res, next) => {
           product.productObjectId.variants.find(
             (variant) => variant.variantId === product.variantId
           );
+        return product.productObjectId;
       }
     });
 
