@@ -711,7 +711,7 @@ const GetProducts = async (req, res, next) => {
     }
 
     if (productType !== "all") {
-      filter.productType === productType;
+      filter.productType = productType;
     }
 
     const products = await ProductModel.find(filter, {
