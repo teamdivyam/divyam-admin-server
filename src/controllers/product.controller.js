@@ -120,6 +120,7 @@ const ProductController = {
         discountPrice,
         originalPrice,
         category,
+        productType
       } = req.body;
 
       // Check slug name is unique and already exist or not
@@ -148,6 +149,7 @@ const ProductController = {
           discountPrice,
           originalPrice,
           category,
+          productType
         },
         { stripUnknown: true } // Remove Unknown Fields
       );
@@ -206,6 +208,7 @@ const ProductController = {
         mainImage: productImageURLs[0],
         images: productImageURLs,
         variants: validatedData.variants,
+        productType: validatedData.productType,
       });
 
       res.status(201).json({

@@ -13,6 +13,11 @@ export const PRODUCT_STATUS = {
   inactive: "inactive",
 };
 
+export const ProductType = {
+  rental: "rental",
+  sale: "sale",
+};
+
 const VariantSchema = new mongoose.Schema(
   {
     stock: {
@@ -75,7 +80,7 @@ const ProductSchema = new mongoose.Schema({
   },
   originalPrice: {
     type: Number,
-    min: 0, 
+    min: 0,
     default: 0,
   },
   discount: {
@@ -110,13 +115,16 @@ const ProductSchema = new mongoose.Schema({
       default: [],
     },
   ],
-  rental: Boolean
+  productType: {
+    type: String,
+    enum: Object.values(ProductType),
+    default: ProductType.rental,
+  },
 });
 
 const ProductModel = mongoose.model("Product", ProductSchema);
 
 export default ProductModel;
-
 
 // import mongoose from "mongoose";
 

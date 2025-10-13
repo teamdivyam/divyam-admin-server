@@ -1,5 +1,9 @@
 import Joi from "joi"; // adjust path if needed
-import { PRODUCT_CATEGORY, PRODUCT_STATUS } from "../models/product.model.js";
+import {
+  PRODUCT_CATEGORY,
+  PRODUCT_STATUS,
+  ProductType,
+} from "../models/product.model.js";
 
 export const ProductSchema = Joi.object({
   stock: Joi.string()
@@ -25,7 +29,7 @@ export const ProductSchema = Joi.object({
   originalPrice: Joi.number().min(0).default(0),
 
   category: Joi.string()
-    .valid('COOKING', 'DINING', 'SERVING', 'DECORATIVE', 'OTHERS')
+    .valid("COOKING", "DINING", "SERVING", "DECORATIVE", "OTHERS")
     .default(PRODUCT_CATEGORY.OTHERS),
 
   tags: Joi.array().items(Joi.string()).default([]),
@@ -33,6 +37,10 @@ export const ProductSchema = Joi.object({
   status: Joi.string()
     .valid("active", "inactive")
     .default(PRODUCT_STATUS.active),
+
+  productType: Joi.string()
+    .valid(...Object.values(ProductType))
+    .default(ProductType.rental),
 
   variants: Joi.array().items(
     Joi.object({

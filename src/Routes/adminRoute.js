@@ -10,6 +10,7 @@ import {
   GET_ORDER_DETAILS,
   GET_PRESIGNED_URL,
   GET_SINGLE_USERS,
+  getDashboardAnalytics,
   LoginAdmin,
   RegisterAdmin,
   RESET_PASSWORD_VERIFY,
@@ -254,5 +255,7 @@ AdminRoute.post("/category", CategoryController.createCategory);
 AdminRoute.patch("/category", CategoryController.updateCategory);
 AdminRoute.delete("/category", CategoryController.deleteCategory);
 
+//--------------------------Admin Dashboard-----------------------------------
+AdminRoute.get("/dashboard-analytics", getDashboardAnalytics)
 
 export default AdminRoute;

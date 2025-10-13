@@ -210,7 +210,7 @@ const PackageController = {
         slug: slug,
         policy: policy,
       });
-
+      
       res.status(201).json({
         success: true,
         message: "New Package Created",

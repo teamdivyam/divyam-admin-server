@@ -22,7 +22,7 @@ import CartModel from "../models/cart.model.js";
 import PackageModel from "../models/package.model.js";
 import TierModel from "../models/tier.model.js";
 import AreaRadiusModel from "../models/arearadius.model.js";
-import { checkMultipleStocks } from "../services/user.js";
+import { checkMultipleStocks } from "../services/user.service.js";
 
 // Register User with Mobile Number..
 const RegisterUser = async (req, res, next) => {
