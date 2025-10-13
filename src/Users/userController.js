@@ -684,6 +684,7 @@ const GetProducts = async (req, res, next) => {
       minPrice,
       maxPrice,
       category,
+      productType = "all",
     } = req.query;
 
     // Build the filter object
@@ -709,11 +710,15 @@ const GetProducts = async (req, res, next) => {
       filter.category = category;
     }
 
+    if (productType !== "all") {
+      filter.productType === productType;
+    }
+
     const products = await ProductModel.find(filter, {
       variants: { $slice: 1 },
     })
       .select(
-        "-_id productId name discount discountPrice originalPrice mainImage category tags status slug"
+        "-_id productId name discount discountPrice originalPrice mainImage category tags status slug productType"
       )
       .skip((page - 1) * limit)
       .limit(limit)
@@ -740,7 +745,7 @@ const GetSingleProduct = async (req, res, next) => {
     const { productSlug } = req.params;
     const product = await ProductModel.findOne({ slug: productSlug })
       .select(
-        `-_id stock productId slug name description discount discountPrice originalPrice 
+        `-_id stock productId slug name description discount discountPrice originalPrice productType 
         images category tags status variants.variantId variants.stock variants.discount variants.discountPrice 
         variants.originalPrice variants.status`
       )
@@ -986,7 +991,11 @@ const CheckAvaibilityUnderRadius = async (req, res) => {
 
 const checkStockAvailable = async (req, res, next) => {
   try {
-    const { cart = "no", fromDate = new Date(), toDate = new Date() } = req.query;
+    const {
+      cart = "no",
+      fromDate = new Date(),
+      toDate = new Date(),
+    } = req.query;
 
     const userId = req.user?.id || "68c3cb85a9c5ba595313aa9a";
 
@@ -1012,13 +1021,11 @@ const checkStockAvailable = async (req, res, next) => {
       });
     } else {
       const { packageId, productId } = req.query;
-
-      
     }
   } catch (error) {
     console.log(error);
     res.status(500).json({ success: false, error: "Order creation failed" });
-  } 
+  }
 };
 
 export {
