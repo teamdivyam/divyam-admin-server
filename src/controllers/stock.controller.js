@@ -22,20 +22,20 @@ const StockController = {
       const [stocks, totalStocks, totalVariantStocks] = await Promise.all([
         getAllStocks(),
         getStockQuantity(),
-        getVariantStockQuantity()
+        getVariantStockQuantity(),
       ]);
 
       const category = {
         values: Object.values(Category),
         totalCategory: Object.values(Category).length,
-      }
+      };
 
       res.status(200).json({
         success: true,
         stocks: stocks,
         totalStocks: totalStocks,
         totalVariantStocks: totalVariantStocks,
-        category: category
+        category: category,
       });
     } catch (error) {
       console.error("error in getting stock:", error);
@@ -355,7 +355,7 @@ const StockController = {
             weight: validatedData.weight,
             size: validatedData.size,
             capacity: validatedData.capacity,
-          }
+          },
         }
       );
 
