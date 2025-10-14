@@ -856,15 +856,28 @@ const GetSinglePackage = async (req, res, next) => {
 
     const filterPackageData = {
       ...packageData,
-      products: packageData.products.map((product) => ({
-        ...product,
-        productObjectId: {
-          ...product.productObjectId,
-          variants: product.productObjectId.variants.filter(
-            (variant) => variant.variantId === product.variantId
-          ),
-        },
-      })),
+      products: packageData.products
+        .map((product) => {
+          const isArrayVariants = Array.isArray(
+            product.productObjectId.variants
+          );
+
+          return {
+            ...product,
+            productObjectId: {
+              ...product.productObjectId,
+              variants: isArrayVariants
+                ? product.productObjectId.variants.filter(
+                    (variant) => variant.variantId === product.variantId
+                  )
+                : product.productObjectId.variants.variantId ===
+                  product.variantId
+                ? product.productObjectId.variants
+                : null,
+            },
+          };
+        })
+        .filter((product) => product.productObjectId.variants !== null),
     };
 
     const productImages = Array.from(
