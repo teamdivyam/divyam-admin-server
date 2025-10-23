@@ -17,7 +17,7 @@ import {
   VALIDATE_USER_ADDRESS,
 } from "../Validators/users/schema.js";
 import logger from "../logger/index.js";
-import ProductModel, { PRODUCT_CATEGORY } from "../models/product.model.js";
+import ProductModel, { PRODUCT_CATEGORY, PRODUCT_STATUS } from "../models/product.model.js";
 import CartModel from "../models/cart.model.js";
 import PackageModel from "../models/package.model.js";
 import TierModel from "../models/tier.model.js";
@@ -697,6 +697,10 @@ const GetProducts = async (req, res, next) => {
         { tags: { $regex: searchTerm, $options: "i" } },
       ];
     }
+    
+
+    // Status
+    filter.status = PRODUCT_STATUS.active;
 
     // Price range filter
     if (minPrice !== undefined || maxPrice !== undefined) {

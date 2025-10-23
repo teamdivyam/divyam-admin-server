@@ -15,6 +15,7 @@ import {
 } from "../services/stock.js";
 import generateStockId from "../utils/generateStockID.js";
 import mongoose from "mongoose";
+import ProductModel from "../models/product.model.js";
 
 const StockController = {
   getStock: async (req, res, next) => {
@@ -73,14 +74,48 @@ const StockController = {
 
   getStockVariantOptions: async (req, res, next) => {
     try {
+      const usedStockIdsInProduct = await ProductModel.distinct("stock");
+
       const options = await StockModel.find({
         parentStockObjectId: null,
         isVariant: false,
+        _id: { $nin: usedStockIdsInProduct },
       }).select("name sku category");
+
+      const availableStocks = await StockModel.aggregate([
+        {
+          $match: {
+            parentStockObjectId: null,
+            isVariant: false,
+          },
+        },
+        {
+          $lookup: {
+            from: "products",
+            localField: "_id",
+            foreignField: "stock",
+            as: "linkedProduct",
+          },
+        },
+        {
+          $match: {
+            linkedProduct: { $size: 0 }, // keep only those with no linked product
+          },
+        },
+        {
+          $project: {
+            name: 1,
+            sku: 1,
+            category: 1,
+            linkedProduct: 1,
+          },
+        },
+      ]);
 
       res.status(200).json({
         success: true,
         options: options,
+        availableStocks: availableStocks
       });
     } catch (error) {
       console.error("error in getting single stock:", error);

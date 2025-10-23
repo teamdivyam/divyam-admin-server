@@ -29,8 +29,7 @@ const VariantSchema = new mongoose.Schema(
     variantName: String,
     originalPrice: {
       type: mongoose.Types.Decimal128,
-      min: 0,
-      default: 0,
+      get: (v) => parseFloat(v?.toString() || 0),
     },
     discount: {
       type: Number,
@@ -40,8 +39,7 @@ const VariantSchema = new mongoose.Schema(
     },
     discountPrice: {
       type: mongoose.Types.Decimal128,
-      min: 0,
-      default: 0,
+      get: (v) => parseFloat(v?.toString() || 0),
     },
     status: {
       type: String,
@@ -77,12 +75,11 @@ const ProductSchema = new mongoose.Schema({
   category: {
     type: String,
     enum: Object.values(PRODUCT_CATEGORY),
-    default: PRODUCT_CATEGORY.OTHERS,
+    default: PRODUCT_CATEGORY.others,
   },
   originalPrice: {
     type: mongoose.Types.Decimal128,
-    min: 0,
-    default: 0,
+    get: (v) => parseFloat(v?.toString() || 0),
   },
   discount: {
     type: Number,
@@ -92,8 +89,7 @@ const ProductSchema = new mongoose.Schema({
   },
   discountPrice: {
     type: mongoose.Types.Decimal128,
-    min: 0,
-    default: 0,
+    get: (v) => parseFloat(v?.toString() || 0),
   },
   mainImage: {
     type: String,
@@ -123,6 +119,9 @@ const ProductSchema = new mongoose.Schema({
     default: ProductType.rental,
   },
 });
+
+ProductSchema.set("toJSON", { getters: rue });
+ProductSchema.set("toObject", { getters: rue });
 
 const ProductModel = mongoose.model("Product", ProductSchema);
 
