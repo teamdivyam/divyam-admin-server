@@ -762,7 +762,6 @@ const GetSingleProduct = async (req, res, next) => {
         select:
           "-_id sku name category quantity status attributes remarks guestCapacity",
       })
-      .lean();
 
     if (!product) {
       return next(createHttpError(404, "Product not found"));

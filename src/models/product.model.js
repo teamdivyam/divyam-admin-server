@@ -40,7 +40,7 @@ const VariantSchema = new mongoose.Schema(
     },
     discountPrice: {
       type: mongoose.Types.Decimal128,
-      set: (v) => mongoose.Types.Decimal128.fromString(v?.toString() || "0"),
+      set: (v) => mongoose.Types.Decimal128.fromString(v?.toString() || "0"), 
       get: (v) => parseFloat(v?.toString() || 0),
     },
     status: {

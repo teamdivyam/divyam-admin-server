@@ -32,7 +32,6 @@ const ProductController = {
         )
         .skip((page - 1) * limit)
         .limit(limit)
-        .lean();
 
       const totalRows = await ProductModel.countDocuments(filter);
 
@@ -82,7 +81,6 @@ const ProductController = {
           path: "variants.stock",
           select: "-_id status sku quantity attributes variantAttributes",
         })
-        .lean();
 
       res.status(200).json({
         success: true,
