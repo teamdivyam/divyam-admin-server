@@ -120,8 +120,8 @@ const ProductSchema = new mongoose.Schema({
   },
 });
 
-ProductSchema.set("toJSON", { getters: rue });
-ProductSchema.set("toObject", { getters: rue });
+ProductSchema.set("toJSON", { getters: true });
+ProductSchema.set("toObject", { getters: true });
 
 const ProductModel = mongoose.model("Product", ProductSchema);
 
