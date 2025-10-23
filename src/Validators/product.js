@@ -29,8 +29,8 @@ export const ProductSchema = Joi.object({
   originalPrice: Joi.number().min(0).default(0),
 
   category: Joi.string()
-    .valid("COOKING", "DINING", "SERVING", "DECORATIVE", "OTHERS")
-    .default(PRODUCT_CATEGORY.OTHERS),
+    .valid(...Object.values(PRODUCT_CATEGORY))
+    .default(PRODUCT_CATEGORY.others),
 
   tags: Joi.array().items(Joi.string()).default([]),
 

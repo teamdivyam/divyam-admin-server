@@ -1,11 +1,11 @@
 import mongoose from "mongoose";
 
 export const PRODUCT_CATEGORY = {
-  COOKING: "COOKING",
-  DINING: "DINING",
-  SERVING: "SERVING",
-  DECORATIVE: "DECORATIVE",
-  OTHERS: "OTHERS",
+  cooking: "cooking",
+  dining: "dining",
+  serving: "serving",
+  decoration: "decoration",
+  others: "others",
 };
 
 export const PRODUCT_STATUS = {
@@ -28,17 +28,18 @@ const VariantSchema = new mongoose.Schema(
     variantId: { type: String, unique: true, sparse: true },
     variantName: String,
     originalPrice: {
-      type: Number,
+      type: mongoose.Types.Decimal128,
       min: 0,
       default: 0,
     },
     discount: {
       type: Number,
       min: 0,
+      max: 100,
       default: 0,
     },
     discountPrice: {
-      type: Number,
+      type: mongoose.Types.Decimal128,
       min: 0,
       default: 0,
     },
@@ -79,17 +80,18 @@ const ProductSchema = new mongoose.Schema({
     default: PRODUCT_CATEGORY.OTHERS,
   },
   originalPrice: {
-    type: Number,
+    type: mongoose.Types.Decimal128,
     min: 0,
     default: 0,
   },
   discount: {
     type: Number,
+    max: 100,
     min: 0,
     default: 0,
   },
   discountPrice: {
-    type: Number,
+    type: mongoose.Types.Decimal128,
     min: 0,
     default: 0,
   },

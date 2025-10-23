@@ -191,12 +191,22 @@ AdminRoute.delete("/stock/:sku", StockController.deleteSingleStock);
 //-------------------------Product Routes--------------------------------
 AdminRoute.get("/product", ProductController.getProducts);
 AdminRoute.get("/product/:productId", ProductController.getSingleProduct);
+AdminRoute.get("/product/edit/:productId", ProductController.getProductForEdit);
 AdminRoute.post(
   "/create-product",
   upload.array("images", 10),
   ProductController.createProduct
 );
+AdminRoute.patch(
+  "/product/:productId",
+  upload.array("images", 10),
+  ProductController.updateProduct
+);
 AdminRoute.delete("/product/:productId", ProductController.deleteProduct);
+AdminRoute.delete(
+  "/delete-product-image/:productId",
+  ProductController.deleteSingleImageFromProduct
+);
 AdminRoute.get("/product-option", ProductController.getProductOption);
 
 //-------------------------Package Routes--------------------------------
@@ -256,6 +266,6 @@ AdminRoute.patch("/category", CategoryController.updateCategory);
 AdminRoute.delete("/category", CategoryController.deleteCategory);
 
 //--------------------------Admin Dashboard-----------------------------------
-AdminRoute.get("/dashboard-analytics", getDashboardAnalytics)
+AdminRoute.get("/dashboard-analytics", getDashboardAnalytics);
 
 export default AdminRoute;

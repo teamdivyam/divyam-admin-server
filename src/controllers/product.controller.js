@@ -53,8 +53,13 @@ const ProductController = {
         categories: categories,
       });
     } catch (error) {
-      console.error("error in get product:", error);
-      next(createHttpError(500, "Internal Server Error"));
+      console.error("GET: admin getting products:", error);
+      next(
+        createHttpError(500, {
+          errorAPI: "GET: admin getting products",
+          message: error.message,
+        })
+      );
     }
   },
 
@@ -84,8 +89,44 @@ const ProductController = {
         product: product,
       });
     } catch (error) {
-      console.error("error in get single product:", error);
-      next(createHttpError(500, "Internal Server Error"));
+      console.error("GET: admin getting single product:", error);
+      next(
+        createHttpError(500, {
+          errorAPI: "GET: admin getting single product",
+          message: error.message,
+        })
+      );
+    }
+  },
+
+  getProductForEdit: async (req, res, next) => {
+    try {
+      const { productId } = req.params;
+
+      const product = await ProductModel.findOne({ productId })
+        .select(
+          `_id name description category originalPrice discount discountPrice 
+        images tags status productType variants.stock variants.variantId variantName 
+        variants.originalPrice variants.discount variants.discountPrice
+        variants.status`
+        )
+        .populate({
+          path: "variants.stock",
+          select: "sku name",
+        });
+
+      res.status(200).json({
+        success: true,
+        product: product,
+      });
+    } catch (error) {
+      console.error("GET: admin getting product for edit:", error);
+      next(
+        createHttpError(500, {
+          errorAPI: "GET: admin getting product for edit",
+          message: error.message,
+        })
+      );
     }
   },
 
@@ -101,8 +142,13 @@ const ProductController = {
         productOption: productOption,
       });
     } catch (error) {
-      console.error("error in get product:", error);
-      next(createHttpError(500, "Internal Server Error"));
+      console.error("GET: admin getting product option:", error);
+      next(
+        createHttpError(500, {
+          errorAPI: "GET: admin getting product option",
+          message: error.message,
+        })
+      );
     }
   },
 
@@ -120,7 +166,7 @@ const ProductController = {
         discountPrice,
         originalPrice,
         category,
-        productType
+        productType,
       } = req.body;
 
       // Check slug name is unique and already exist or not
@@ -149,7 +195,7 @@ const ProductController = {
           discountPrice,
           originalPrice,
           category,
-          productType
+          productType,
         },
         { stripUnknown: true } // Remove Unknown Fields
       );
@@ -320,6 +366,88 @@ const ProductController = {
 
   // updateProduct: async (req, res, next) => {},
 
+  updateProduct: async (req, res, next) => {
+    try {
+      const { productId } = req.params;
+      const formData = req.body;
+
+      console.log("hell:", formData);
+
+      // checking product name is already taken or not
+      if (formData.name) {
+        const slug = slugify(name, { lower: true, strict: true });
+        const slugAlreadyExists = await ProductModel.findOne({ slug });
+        if (slugAlreadyExists) {
+          return next(
+            createHttpError(409, {
+              errorAPI: "PATCH: admin update product",
+              message: "Product name already taken!",
+            })
+          );
+        }
+      }
+
+      // Store product images in S3
+      const productImageFiles = req.files;
+      let productImageURLs = [];
+      try {
+        productImageURLs = await multipleFileUploadS3({
+          filePath: "UI/product-image",
+          files: productImageFiles,
+        });
+      } catch (error) {
+        next(
+          createHttpError(400, {
+            errorAPI: "PATCH: admin update product",
+            message: "Failed to upload file",
+          })
+        );
+      }
+
+      const product = await ProductModel.findOne({ productId });
+
+      for (const key in formData) {
+        if (key === "variants") {
+          const variants = JSON.parse(formData["variants"]);
+          variants.forEach((variant) => {
+            product.variants.forEach((v) => {
+              if (v.stock === variant.stock) {
+                v.originalPrice = variant.originalPrice;
+                v.discount = variant.discount;
+              }
+            });
+          });
+        } else if (key === "tags") {
+          product[key] = JSON.parse(formData[key]);
+        } else {
+          product[key] = formData[key];
+        }
+      }
+
+      if (productImageURLs.length > 0) {
+        product.images.push(...productImageURLs);
+        if (!product.mainImage) {
+          product.mainImage = product.images[0];
+        }
+      }
+
+      await product.save();
+
+      res.status(201).json({
+        success: true,
+        message: "Successfully product updated!",
+      });
+    } catch (error) {
+      console.error("PATCH: admin update product", error);
+      next(
+        createHttpError(500, {
+          errorAPI: "PATCH: admin update product",
+          message: error.message,
+        })
+      );
+    }
+  },
+
   deleteProduct: async (req, res, next) => {
     try {
       const { productId } = req.params;
@@ -337,8 +465,44 @@ const ProductController = {
 
       res.status(204).send("Product deleted");
     } catch (error) {
-      console.error("error in delete product:", error);
-      next(createHttpError(500, "Internal Server Error"));
+      console.error("GET: admin delete product:", error);
+      next(
+        createHttpError(500, {
+          errorAPI: "GET: admin getting delete product",
+          message: error.message,
+        })
+      );
+    }
+  },
+
+  deleteSingleImageFromProduct: async (req, res, next) => {
+    try {
+      const { productId } = req.params;
+      const { imageURL } = req.query;
+
+      const deletedImage = await deleteFileS3(imageURL);
+      if (deletedImage.success) {
+        const product = await ProductModel.findOne({ productId });
+        if (product.mainImage === imageURL) {
+          product.mainImage = null;
+        }
+        const filterImages = product.images.filter((img) => img !== imageURL);
+        product.images = filterImages;
+      }
+
+      res.status(200).json({
+        success: true,
+        message: `Successfully delete image: ${imageURL}`,
+      });
+    } catch (error) {
+      console.error("DELETE: admin delete single image products:", error);
+      next(
+        createHttpError(500, {
+          errorAPI: "DELETE: admin delete single image products",
+          message: "Error in delete product image",
+          debugMessage: error.message,
+        })
+      );
     }
   },
 };

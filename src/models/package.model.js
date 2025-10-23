@@ -58,13 +58,13 @@ const PackageSchema = new mongoose.Schema(
     ],
 
     discountPrice: {
-      type: Number,
+      type: mongoose.Types.Decimal128,
       min: 0,
       default: 0,
     },
 
     originalPrice: {
-      type: Number,
+      type: mongoose.Types.Decimal128,
       required: true,
       min: 0,
     },

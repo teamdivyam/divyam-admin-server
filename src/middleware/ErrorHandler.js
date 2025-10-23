@@ -7,6 +7,7 @@ const globalErrorHandler = (error, req, res, next) => {
         message: error.message || "Internal Server Error",
         validationError: error.validationError,
         validationErrorList: error.validationErrorList,
+        errorAPI: error.errorAPI
     });
 }
 

@@ -45,7 +45,7 @@ export const fileUploadS3 = async ({ filePath, file }) => {
 export const multipleFileUploadS3 = async ({ filePath, files }) => {
   try {
     if (!Array.isArray(files) || files.length === 0) {
-      return;
+      return [];
     }
 
     // Upload files in parallel
