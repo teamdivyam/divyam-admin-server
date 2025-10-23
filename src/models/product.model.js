@@ -29,6 +29,7 @@ const VariantSchema = new mongoose.Schema(
     variantName: String,
     originalPrice: {
       type: mongoose.Types.Decimal128,
+      set: (v) => mongoose.Types.Decimal128.fromString(v?.toString() || "0"),
       get: (v) => parseFloat(v?.toString() || 0),
     },
     discount: {
@@ -39,6 +40,7 @@ const VariantSchema = new mongoose.Schema(
     },
     discountPrice: {
       type: mongoose.Types.Decimal128,
+      set: (v) => mongoose.Types.Decimal128.fromString(v?.toString() || "0"),
       get: (v) => parseFloat(v?.toString() || 0),
     },
     status: {
@@ -79,6 +81,7 @@ const ProductSchema = new mongoose.Schema({
   },
   originalPrice: {
     type: mongoose.Types.Decimal128,
+    set: (v) => mongoose.Types.Decimal128.fromString(v?.toString() || "0"),
     get: (v) => parseFloat(v?.toString() || 0),
   },
   discount: {
@@ -89,6 +92,7 @@ const ProductSchema = new mongoose.Schema({
   },
   discountPrice: {
     type: mongoose.Types.Decimal128,
+    set: (v) => mongoose.Types.Decimal128.fromString(v?.toString() || "0"),
     get: (v) => parseFloat(v?.toString() || 0),
   },
   mainImage: {
