@@ -74,12 +74,12 @@ const StockController = {
 
   getStockVariantOptions: async (req, res, next) => {
     try {
-      const usedStockIdsInProduct = await ProductModel.distinct("stock");
+      // const usedStockIdsInProduct = await ProductModel.distinct("stock");
 
       const options = await StockModel.find({
         parentStockObjectId: null,
         isVariant: false,
-        _id: { $nin: usedStockIdsInProduct },
+        // _id: { $nin: usedStockIdsInProduct },
       }).select("name sku category");
 
       // const availableStocks = await StockModel.aggregate([
