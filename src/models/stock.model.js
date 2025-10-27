@@ -1,12 +1,5 @@
 import mongoose from "mongoose";
-
-export const Category = {
-  cooking: "cooking",
-  dining: "dining",
-  serving: "serving",
-  decoration: "decoration",
-  others: "others",
-};
+import { Category } from "../utils/modelConstants.js";
 
 export const StockStatus = {
   active: "active",

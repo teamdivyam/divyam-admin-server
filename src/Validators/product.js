@@ -1,9 +1,5 @@
-import Joi from "joi"; // adjust path if needed
-import {
-  PRODUCT_CATEGORY,
-  PRODUCT_STATUS,
-  ProductType,
-} from "../models/product.model.js";
+import Joi from "joi";
+import { Category, ProductStatus, ProductType } from "../utils/modelConstants.js";
 
 export const ProductSchema = Joi.object({
   stock: Joi.string()
@@ -29,14 +25,14 @@ export const ProductSchema = Joi.object({
   originalPrice: Joi.number().min(0).default(0),
 
   category: Joi.string()
-    .valid(...Object.values(PRODUCT_CATEGORY))
-    .default(PRODUCT_CATEGORY.others),
+    .valid(...Object.values(Category))
+    .default(Category.others),
 
   tags: Joi.array().items(Joi.string()).default([]),
 
   status: Joi.string()
-    .valid("active", "inactive")
-    .default(PRODUCT_STATUS.active),
+    .valid(...Object.values(ProductStatus))
+    .default(ProductStatus.active),
 
   productType: Joi.string()
     .valid(...Object.values(ProductType))
@@ -57,7 +53,7 @@ export const ProductSchema = Joi.object({
       originalPrice: Joi.number().min(0).default(0),
       status: Joi.string()
         .valid("active", "inactive")
-        .default(PRODUCT_STATUS.active),
+        .default(ProductStatus.active),
     })
   ),
 });
@@ -88,6 +84,6 @@ export const ProductSchema = Joi.object({
 
 // export const ProductChangeStatusSchema = Joi.object({
 //   status: Joi.string()
-//     .valid(...Object.values(PRODUCT_STATUS))
-//     .default(PRODUCT_STATUS.active),
+//     .valid(...Object.values(ProductStatus))
+//     .default(ProductStatus.active),
 // });

@@ -1,4 +1,4 @@
-import ReservedStockModel from "../models/reservedStock.model.js";
+import ReservedProductModel from "../models/reserveProduct.model.js";
 import StockModel from "../models/stock.model.js";
 
 export const checkStockAvailability = async (
@@ -8,7 +8,7 @@ export const checkStockAvailability = async (
   toDate
 ) => {
   // Find all overlapping reservations for this stock
-  const reserved = await ReservedStockModel.aggregate([
+  const reserved = await ReservedProductModel.aggregate([
     {
       $match: {
         sku: sku,

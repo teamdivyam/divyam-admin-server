@@ -1,5 +1,5 @@
 import { ProductSchema } from "../Validators/product.js";
-import ProductModel, { PRODUCT_CATEGORY } from "../models/product.model.js";
+import ProductModel from "../models/product.model.js";
 import createHttpError from "http-errors";
 import generateProductID from "../utils/generateProductID.js";
 import slugify from "slugify";
@@ -7,10 +7,39 @@ import generateVariantID from "../utils/generateVariantID.js";
 import StockModel from "../models/stock.model.js";
 import { multipleFileUploadS3 } from "../utils/uploadFileS3.js";
 import { deleteFileS3, deleteMultipleFilesS3 } from "../utils/deleteFileS3.js";
-import { generateSKU } from "../utils/generateID.js";
-import CategoryModel from "../models/category.model.js";
+import { Category, ProductType } from "../utils/modelConstants.js";
+import { processedVariantObject } from "../services/product.service.js";
 
 const ProductController = {
+  getProductMetrics: async (req, res, next) => {
+    try {
+      const totalProducts = await ProductModel.countDocuments({});
+      const totalProductActive = await ProductModel.countDocuments({
+        status: "active",
+      });
+      const totalProductInactive = await ProductModel.countDocuments({
+        status: "inactive",
+      });
+      const categories = Object.keys(Category).length;
+
+      res.status(200).json({
+        success: true,
+        totalProducts: totalProducts,
+        totalProductActive: totalProductActive,
+        totalProductInactive: totalProductInactive,
+        categories: categories,
+      });
+    } catch (error) {
+      console.error("GET: admin getting products analytics:", error);
+      next(
+        createHttpError(500, {
+          errorAPI: "GET: admin getting products analytics",
+          message: error.message,
+        })
+      );
+    }
+  },
+
   getProducts: async (req, res, next) => {
     try {
       const { page = 1, searchTerm, limit = 10 } = req.query;
@@ -28,28 +57,19 @@ const ProductController = {
 
       const products = await ProductModel.find(filter)
         .select(
-          `name slug mainImage productId category discountPrice mainImage originalPrice status`
+          `name slug mainImage productId category mainImage status productType`
         )
         .skip((page - 1) * limit)
-        .limit(limit)
+        .limit(limit);
 
       const totalRows = await ProductModel.countDocuments(filter);
-
-      const totalProductActive = await ProductModel.countDocuments({
-        status: "active",
-      });
-      const totalProductInactive = await ProductModel.countDocuments({
-        status: "inactive",
-      });
-      const categories = PRODUCT_CATEGORY;
+      const categories =Category;
 
       res.status(200).json({
         success: true,
         products: products,
         totalRows: totalRows,
-        totalProductActive: totalProductActive,
-        totalProductInactive: totalProductInactive,
-        categories: categories,
+        categories: categories
       });
     } catch (error) {
       console.error("GET: admin getting products:", error);
@@ -70,8 +90,7 @@ const ProductController = {
         .select(
           `-_id productId slug name description category originalPrice 
           discount discountPrice mainImage images tags status
-          variants.variantId variants.variantName variants.originalPrice 
-          variants.discount variants.discountPrice variants.status`
+          variants.variantId variants.variantName variants.price variants.status`
         )
         .populate({
           path: "stock",
@@ -80,7 +99,7 @@ const ProductController = {
         .populate({
           path: "variants.stock",
           select: "-_id status sku quantity attributes variantAttributes",
-        })
+        });
 
       res.status(200).json({
         success: true,
@@ -160,9 +179,6 @@ const ProductController = {
         tags,
         variants,
         status,
-        discount,
-        discountPrice,
-        originalPrice,
         category,
         productType,
       } = req.body;
@@ -180,7 +196,7 @@ const ProductController = {
       }
 
       // Validation Checking
-      const { error, value: validatedData } = ProductSchema.validate(
+      const { error, value: validData } = ProductSchema.validate(
         {
           stock,
           sku,
@@ -189,9 +205,6 @@ const ProductController = {
           tags: JSON.parse(tags),
           variants: JSON.parse(variants),
           status,
-          discount,
-          discountPrice,
-          originalPrice,
           category,
           productType,
         },
@@ -225,34 +238,21 @@ const ProductController = {
       // Generate product id
       const productId = generateProductID();
 
-      // Generate variant id and store variant name
-      for (let i = 0; i < validatedData.variants.length; i++) {
-        const stock = await StockModel.findById(
-          validatedData.variants[i].stock
-        );
-        validatedData.variants[i].variantId = generateVariantID();
-        validatedData.variants[i].variantName = stock.name;
-      }
+      // Structure variant according to variant model of product
+      const processedVariant = await processedVariantObject(validData);
 
       await ProductModel.create({
         productId: productId,
         slug: slug,
-        stock: validatedData.stock,
-        name: validatedData.name,
-        description: validatedData.description,
-        discount: validatedData.discount || validatedData.variants[0]?.discount,
-        discountPrice:
-          Number(validatedData.discountPrice.toFixed(2)) ||
-          Number(validatedData.variants[0]?.discountPrice.toFixed(2)),
-        originalPrice:
-          validatedData.originalPrice ||
-          validatedData.variants[0]?.originalPrice,
-        category: validatedData.category,
-        tags: validatedData.tags,
+        stock: validData.stock,
+        name: validData.name,
+        description: validData.description,
+        category: validData.category,
+        tags: validData.tags,
         mainImage: productImageURLs[0],
         images: productImageURLs,
-        variants: validatedData.variants,
-        productType: validatedData.productType,
+        variants: processedVariant,
+        productType: validData.productType,
       });
 
       res.status(201).json({
@@ -373,7 +373,7 @@ const ProductController = {
 
       // checking product name is already taken or not
       if (formData.name) {
-        const slug = slugify(name, { lower: true, strict: true });
+        const slug = slugify(formData.name, { lower: true, strict: true });
         const slugAlreadyExists = await ProductModel.findOne({ slug });
         if (slugAlreadyExists) {
           return next(
@@ -404,14 +404,29 @@ const ProductController = {
 
       const product = await ProductModel.findOne({ productId });
 
+      /**
+       * Using loop for update product properties value
+       * 3 different cases: variants, tags, and other non-nested properties
+       */
       for (const key in formData) {
         if (key === "variants") {
           const variants = JSON.parse(formData["variants"]);
           variants.forEach((variant) => {
             product.variants.forEach((v) => {
-              if (v.stock === variant.stock) {
+              if (v.stock.toString() === variant.stock) {
                 v.originalPrice = variant.originalPrice;
                 v.discount = variant.discount;
+                v.discountPrice = variant.discountPrice;
+
+                if (product.productType === ProductType.rental) {
+                  v.price.rental.price = variant.originalPrice;
+                  v.price.rental.discount = variant.discount;
+                  v.price.rental.discountPrice = variant.discountPrice;
+                } else if (product.productType === ProductType.sale) {
+                  v.price.sale.price = variant.originalPrice;
+                  v.price.sale.discount = variant.discount;
+                  v.price.sale.discountPrice = variant.discountPrice;
+                }
               }
             });
           });
@@ -478,14 +493,23 @@ const ProductController = {
       const { productId } = req.params;
       const { imageURL } = req.query;
 
+      console.log("product id:", productId);
+      console.log("image URL:", imageURL);
+
       const deletedImage = await deleteFileS3(imageURL);
+      console.log("images deleted:", deletedImage);
       if (deletedImage.success) {
         const product = await ProductModel.findOne({ productId });
         if (product.mainImage === imageURL) {
           product.mainImage = null;
+          if (product.images.length > 0) {
+            product.mainImage = product.images[0];
+          }
         }
         const filterImages = product.images.filter((img) => img !== imageURL);
         product.images = filterImages;
+
+        await product.save();
       }
 
       res.status(200).json({

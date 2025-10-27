@@ -17,12 +17,13 @@ import {
   VALIDATE_USER_ADDRESS,
 } from "../Validators/users/schema.js";
 import logger from "../logger/index.js";
-import ProductModel, { PRODUCT_CATEGORY, PRODUCT_STATUS } from "../models/product.model.js";
+import ProductModel from "../models/product.model.js";
 import CartModel from "../models/cart.model.js";
 import PackageModel from "../models/package.model.js";
 import TierModel from "../models/tier.model.js";
 import AreaRadiusModel from "../models/arearadius.model.js";
 import { checkMultipleStocks } from "../services/user.service.js";
+import { Category, ProductStatus } from "../utils/modelConstants.js";
 
 // Register User with Mobile Number..
 const RegisterUser = async (req, res, next) => {
@@ -700,7 +701,7 @@ const GetProducts = async (req, res, next) => {
     
 
     // Status
-    filter.status = PRODUCT_STATUS.active;
+    filter.status = ProductStatus.active;
 
     // Price range filter
     if (minPrice !== undefined || maxPrice !== undefined) {
@@ -732,7 +733,7 @@ const GetProducts = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      categories: Object.values(PRODUCT_CATEGORY),
+      categories: Object.values(Category),
       products: products,
       total,
       page,

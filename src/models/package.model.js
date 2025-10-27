@@ -59,21 +59,21 @@ const PackageSchema = new mongoose.Schema(
 
     discountPrice: {
       type: mongoose.Types.Decimal128,
-      min: 0,
-      default: 0,
+      set: (v) => mongoose.Types.Decimal128.fromString(v?.toString() || "0"),
+      get: (v) => parseFloat(v?.toString() || 0),
     },
 
     originalPrice: {
       type: mongoose.Types.Decimal128,
-      required: true,
-      min: 0,
+      set: (v) => mongoose.Types.Decimal128.fromString(v?.toString() || "0"),
+      get: (v) => parseFloat(v?.toString() || 0),
     },
 
     discountPercent: {
       type: Number,
       min: 0,
       max: 100,
-      default: 0
+      default: 0,
     },
 
     rating: {
@@ -116,13 +116,16 @@ const PackageSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-PackageSchema.pre("save", function (next) {
-    if (this.discountPercent === 0) {
-        this.discountPrice = this.originalPrice
-    }
+PackageSchema.set("toJSON", { getters: true });
+PackageSchema.set("toObject", { getters: true });
 
-    next();
-})
+PackageSchema.pre("save", function (next) {
+  if (this.discountPercent === 0) {
+    this.discountPrice = this.originalPrice;
+  }
+
+  next();
+});
 
 const PackageModel = mongoose.model("PackageV1", PackageSchema);
 export default PackageModel;

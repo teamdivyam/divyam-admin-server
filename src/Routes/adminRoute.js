@@ -190,6 +190,7 @@ AdminRoute.delete("/stock/:sku", StockController.deleteSingleStock);
 
 //-------------------------Product Routes--------------------------------
 AdminRoute.get("/product", ProductController.getProducts);
+AdminRoute.get("/product/metrics", ProductController.getProductMetrics);
 AdminRoute.get("/product/:productId", ProductController.getSingleProduct);
 AdminRoute.get("/product/edit/:productId", ProductController.getProductForEdit);
 AdminRoute.post(

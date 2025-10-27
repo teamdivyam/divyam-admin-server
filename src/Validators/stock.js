@@ -1,10 +1,10 @@
 import Joi from "joi";
 import {
   CapacityUnit,
-  Category,
   SizeUnit,
   WeightUnit,
 } from "../models/stock.model.js";
+import { Category } from "../utils/modelConstants.js";
 
 export const AddNewStockSchema = Joi.object({
   name: Joi.string().trim().required().min(2).max(100).messages({

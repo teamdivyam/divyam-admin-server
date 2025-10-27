@@ -1,5 +1,5 @@
 import createHttpError from "http-errors";
-import StockModel, { Category } from "../models/stock.model.js";
+import StockModel from "../models/stock.model.js";
 import {
   // VariantUpdateValidationSchema,
   AddNewStockSchema,
@@ -16,6 +16,7 @@ import {
 import generateStockId from "../utils/generateStockID.js";
 import mongoose from "mongoose";
 import ProductModel from "../models/product.model.js";
+import { Category } from "../utils/modelConstants.js";
 
 const StockController = {
   getStock: async (req, res, next) => {

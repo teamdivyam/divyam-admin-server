@@ -1,22 +1,9 @@
 import mongoose from "mongoose";
-
-export const PRODUCT_CATEGORY = {
-  cooking: "cooking",
-  dining: "dining",
-  serving: "serving",
-  decoration: "decoration",
-  others: "others",
-};
-
-export const PRODUCT_STATUS = {
-  active: "active",
-  inactive: "inactive",
-};
-
-export const ProductType = {
-  rental: "rental",
-  sale: "sale",
-};
+import {
+  Category,
+  ProductStatus,
+  ProductType,
+} from "../utils/modelConstants.js";
 
 const VariantSchema = new mongoose.Schema(
   {
@@ -32,21 +19,50 @@ const VariantSchema = new mongoose.Schema(
       set: (v) => mongoose.Types.Decimal128.fromString(v?.toString() || "0"),
       get: (v) => parseFloat(v?.toString() || 0),
     },
-    discount: {
-      type: Number,
-      min: 0,
-      max: 100,
-      default: 0,
-    },
+    discount: { type: Number, min: 0, max: 95 },
     discountPrice: {
       type: mongoose.Types.Decimal128,
-      set: (v) => mongoose.Types.Decimal128.fromString(v?.toString() || "0"), 
+      set: (v) => mongoose.Types.Decimal128.fromString(v?.toString() || "0"),
       get: (v) => parseFloat(v?.toString() || 0),
+    },
+    // Update Properties
+    price: {
+      rental: {
+        price: {
+          type: mongoose.Types.Decimal128,
+          set: (v) =>
+            mongoose.Types.Decimal128.fromString(v?.toString() || "0"),
+          get: (v) => parseFloat(v?.toString() || 0),
+        },
+        discount: { type: Number, min: 0, max: 95 },
+        discountPrice: {
+          type: mongoose.Types.Decimal128,
+          set: (v) =>
+            mongoose.Types.Decimal128.fromString(v?.toString() || "0"),
+          get: (v) => parseFloat(v?.toString() || 0),
+        },
+      },
+      sale: {
+        price: {
+          type: mongoose.Types.Decimal128,
+          set: (v) =>
+            mongoose.Types.Decimal128.fromString(v?.toString() || "0"),
+          get: (v) => parseFloat(v?.toString() || 0),
+        },
+        discount: { type: Number, min: 0, max: 95 },
+        discountPrice: {
+          type: mongoose.Types.Decimal128,
+          set: (v) =>
+            mongoose.Types.Decimal128.fromString(v?.toString() || "0"),
+          get: (v) => parseFloat(v?.toString() || 0),
+        },
+      },
+      tax: { type: Number, min: 0, max: 28, default: 0 },
     },
     status: {
       type: String,
-      enum: Object.values(PRODUCT_STATUS),
-      default: PRODUCT_STATUS.active,
+      enum: Object.values(ProductStatus),
+      default: ProductStatus.active,
     },
   },
   { _id: false }
@@ -76,24 +92,8 @@ const ProductSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: Object.values(PRODUCT_CATEGORY),
-    default: PRODUCT_CATEGORY.others,
-  },
-  originalPrice: {
-    type: mongoose.Types.Decimal128,
-    set: (v) => mongoose.Types.Decimal128.fromString(v?.toString() || "0"),
-    get: (v) => parseFloat(v?.toString() || 0),
-  },
-  discount: {
-    type: Number,
-    max: 100,
-    min: 0,
-    default: 0,
-  },
-  discountPrice: {
-    type: mongoose.Types.Decimal128,
-    set: (v) => mongoose.Types.Decimal128.fromString(v?.toString() || "0"),
-    get: (v) => parseFloat(v?.toString() || 0),
+    enum: Object.values(Category),
+    default: Category.others,
   },
   mainImage: {
     type: String,
@@ -108,8 +108,8 @@ const ProductSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: Object.values(PRODUCT_STATUS),
-    default: PRODUCT_STATUS.active,
+    enum: Object.values(ProductStatus),
+    default: ProductStatus.active,
   },
   variants: [
     {
@@ -130,29 +130,3 @@ ProductSchema.set("toObject", { getters: true });
 const ProductModel = mongoose.model("Product", ProductSchema);
 
 export default ProductModel;
-
-// import mongoose from "mongoose";
-
-// export const ProductStatus = {
-//   active: "active",
-//   inactive: "inactive",
-// }
-
-// const ProductSchema = new mongoose.Schema(
-//   {
-//     sku: { type: String, required: true, unique: true, index: true },
-//     slug: { type: String, required: true, unique: true, index: true },
-//     name: { type: String, min: 4, max: 100 },
-//     description: { type: String },
-//     categoryId: { type: mongoose.Schema.Types.ObjectId, required: true },
-//     variants: [{ type: mongoose.Schema.Types.ObjectId, ref: "Variant" }],
-//     tags: [{ type: String, unique: true }],
-//     attributes: { material: String, brand: String },
-//     images: [{ type: String }],
-//     status: { type: String, enum: Object.values(ProductStatus) },
-//   },
-//   { timestamps: true }
-// );
-
-// const ProductModel = mongoose.model("Product", ProductSchema);
-// export default ProductModel;

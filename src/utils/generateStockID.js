@@ -1,5 +1,5 @@
 import { customAlphabet } from 'nanoid';
-import { Category } from '../models/stock.model.js';
+import { Category } from './modelConstants.js';
 
 export default function generateStockId(categoryKey) {
   const alphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';

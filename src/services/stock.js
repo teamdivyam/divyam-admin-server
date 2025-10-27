@@ -1,5 +1,6 @@
-import StockModel, { Category } from "../models/stock.model.js";
+import StockModel from "../models/stock.model.js";
 import generateStockId from "../utils/generateStockID.js";
+import { Category } from "../utils/modelConstants.js";
 
 export const getTotalStocks = async () => {
   try {
