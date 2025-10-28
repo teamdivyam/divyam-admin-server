@@ -698,8 +698,7 @@ const GetProducts = async (req, res, next) => {
         { tags: { $regex: searchTerm, $options: "i" } },
       ];
     }
-    
-
+  
     // Status
     filter.status = ProductStatus.active;
 
@@ -723,7 +722,8 @@ const GetProducts = async (req, res, next) => {
       variants: { $slice: 1 },
     })
       .select(
-        "-_id productId name discount discountPrice originalPrice mainImage category tags status slug productType"
+        `-_id productId name discount discountPrice originalPrice 
+        mainImage category tags status slug productType`
       )
       .skip((page - 1) * limit)
       .limit(limit)

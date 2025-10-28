@@ -63,13 +63,13 @@ const ProductController = {
         .limit(limit);
 
       const totalRows = await ProductModel.countDocuments(filter);
-      const categories =Category;
+      const categories = Category;
 
       res.status(200).json({
         success: true,
         products: products,
         totalRows: totalRows,
-        categories: categories
+        categories: categories,
       });
     } catch (error) {
       console.error("GET: admin getting products:", error);
@@ -372,6 +372,7 @@ const ProductController = {
       console.log("hell:", formData);
 
       // checking product name is already taken or not
+      let updateSlug = null;
       if (formData.name) {
         const slug = slugify(formData.name, { lower: true, strict: true });
         const slugAlreadyExists = await ProductModel.findOne({ slug });
@@ -382,6 +383,8 @@ const ProductController = {
               message: "Product name already taken!",
             })
           );
+        } else {
+          updateSlug = slug;
         }
       }
 
@@ -442,6 +445,10 @@ const ProductController = {
         if (!product.mainImage) {
           product.mainImage = product.images[0];
         }
+      }
+
+      if (updateSlug) {
+        product.slug = updateSlug;
       }
 
       await product.save();
