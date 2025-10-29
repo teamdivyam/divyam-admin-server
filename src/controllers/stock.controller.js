@@ -17,6 +17,8 @@ import generateStockId from "../utils/generateStockID.js";
 import mongoose from "mongoose";
 import ProductModel from "../models/product.model.js";
 import { Category } from "../utils/modelConstants.js";
+import generateVariantID from "../utils/generateVariantID.js";
+import { deleteFileS3, deleteMultipleFilesS3 } from "../utils/deleteFileS3.js";
 
 const StockController = {
   getStock: async (req, res, next) => {
@@ -197,7 +199,7 @@ const StockController = {
             validatedData.variantStockCategory
           );
 
-          await StockModel.create({
+          const newVariantStock = await StockModel.create({
             parentStockId: validatedData.parentStockId,
             sku: skuVarientStock,
             name: validatedData.variantStockName,
@@ -215,6 +217,23 @@ const StockController = {
             remarks: validatedData.variantRemarks,
             quantity: validatedData.variantStockQuantity,
           });
+
+          // If product of this stock already exist, then add
+          // this variant stock inside product variant array
+          const product = await ProductModel.findOne({
+            stock: validatedData.parentStockId,
+          });
+          if (product) {
+            const variantId = generateVariantID();
+
+            product.variants.push({
+              stock: newVariantStock._id,
+              variantId: variantId,
+              variantName: newVariantStock.name,
+            });
+
+            await product.save();
+          }
 
           return res.status(201).json({
             success: true,
@@ -411,25 +430,39 @@ const StockController = {
 
       const stock = await StockModel.findOne({ sku });
 
-      // First delete it's variant stocks if any
-      await StockModel.deleteMany(
-        { parentStockObjectId: stock._id },
-        { session }
-      );
+      if (stock.isVariant) {
+        // delete variant inside product
+        await ProductModel.updateOne(
+          { stock: stock.parentStockId },
+          {
+            $pull: { variants: { stock: stock._id } },
+          },
+          { session }
+        );
+      } else {
+        await StockModel.deleteMany(
+          { parentStockObjectId: stock._id },
+          { session }
+        );
 
-      const deletedStock = await StockModel.deleteOne(
-        {
-          sku,
-        },
-        { session }
-      );
+        // delete product associate with this stock
+        const product = await ProductModel.findOne({ stock: stock._id });
+
+        // Delete images in package in S3
+        await deleteFileS3(product.mainImage);
+        await deleteMultipleFilesS3(product.images);
+
+        await ProductModel.deleteOne({ stock: stock._id }, { session });
+      }
+
+      await StockModel.findByIdAndDelete(stock._id, {
+        session,
+      });
+
+      // First delete it's variant stocks if any
 
       await session.commitTransaction();
       session.endSession();
-
-      if (deletedStock.deletedCount === 0) {
-        return res.status(404).send();
-      }
 
       res.status(204).send();
     } catch (error) {

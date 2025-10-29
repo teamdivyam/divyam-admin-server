@@ -81,7 +81,7 @@ const ProductController = {
       );
     }
   },
-
+  
   getSingleProduct: async (req, res, next) => {
     try {
       const { productId } = req.params;
