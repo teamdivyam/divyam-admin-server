@@ -5,7 +5,7 @@ import generateProductID from "../utils/generateProductID.js";
 import slugify from "slugify";
 import generateVariantID from "../utils/generateVariantID.js";
 import StockModel from "../models/stock.model.js";
-import { multipleFileUploadS3 } from "../utils/uploadFileS3.js";
+import { fileUploadS3, multipleFileUploadS3 } from "../utils/uploadFileS3.js";
 import { deleteFileS3, deleteMultipleFilesS3 } from "../utils/deleteFileS3.js";
 import { Category, ProductType } from "../utils/modelConstants.js";
 import { processedVariantObject } from "../services/product.service.js";
@@ -81,7 +81,7 @@ const ProductController = {
       );
     }
   },
-  
+
   getSingleProduct: async (req, res, next) => {
     try {
       const { productId } = req.params;
@@ -122,7 +122,7 @@ const ProductController = {
 
       const product = await ProductModel.findOne({ productId })
         .select(
-          `_id name description category originalPrice discount discountPrice 
+          `_id name description category originalPrice discount discountPrice mainImage
         images tags status productType variants.stock variants.variantId variantName 
         variants.originalPrice variants.discount variants.discountPrice
         variants.status`
@@ -224,15 +224,43 @@ const ProductController = {
       }
 
       // Store product images in S3
-      const productImageFiles = req.files;
-      let productImageURLs = [];
+      // const productImageFiles = req.files;
+      // let productImageURLs = [];
+      // try {
+      //   productImageURLs = await multipleFileUploadS3({
+      //     filePath: "UI/product-image",
+      //     files: productImageFiles,
+      //   });
+      // } catch (error) {
+      //   next(createHttpError(400, "Failed to upload file"));
+      // }
+
+      const mainImageFile = req.files.mainImage?.[0];
+      const productImageFile = req.files.productImage;
+
+      let mainImageURL;
       try {
-        productImageURLs = await multipleFileUploadS3({
+        if (!mainImageFile) {
+          throw new Error("Package main image is not provided!");
+        }
+        mainImageURL = await fileUploadS3({
           filePath: "UI/product-image",
-          files: productImageFiles,
+          file: mainImageFile,
         });
       } catch (error) {
-        next(createHttpError(400, "Failed to upload file"));
+        return next(createHttpError(400, error.message));
+      }
+
+      let productImageURL = [];
+      try {
+        productImageURL = await multipleFileUploadS3({
+          filePath: "UI/package-banner-image",
+          files: productImageFile,
+        });
+      } catch (error) {
+        return next(
+          createHttpError(400, error.message, { message: error.message })
+        );
       }
 
       // Generate product id
@@ -249,8 +277,8 @@ const ProductController = {
         description: validData.description,
         category: validData.category,
         tags: validData.tags,
-        mainImage: productImageURLs[0],
-        images: productImageURLs,
+        mainImage: mainImageURL,
+        images: productImageURL,
         variants: processedVariant,
         productType: validData.productType,
       });
@@ -264,105 +292,6 @@ const ProductController = {
       next(createHttpError(500, "Internal Server Error"));
     }
   },
-
-  // createProduct: async (req, res, next) => {
-  //   try {
-  //     const {
-  //       name,
-  //       description,
-  //       categoryId, // Object ID
-  //       attributes, // JSON format
-  //       tags, // JSON format
-  //     } = req.body;
-
-  //     console.log("req.boyd:", req.body);
-
-  //     /** Checking slug of product already exist or not */
-  //     const slug = slugify(name, { lower: true, strict: true });
-  //     const isSlugAlreadyExists = await ProductModel.findOne({ slug });
-  //     if (isSlugAlreadyExists) {
-  //       return next(
-  //         createHttpError(
-  //           409,
-  //           "Choose different product name. It's already exits!"
-  //         )
-  //       );
-  //     }
-
-  //     // Body validation checking
-  //     const { error, value: validatedData } = ProductSchema.validate(
-  //       {
-  //         name: name,
-  //         description: description,
-  //         categoryId: categoryId,
-  //         attributes: JSON.parse(attributes),
-  //         tags: JSON.parse(tags),
-  //       },
-  //       { stripUnknown: true } // Remove Unknown Fields
-  //     );
-  //     if (error) {
-  //       const errorMessage = error.details.map((detail) => ({
-  //         field: detail.path.join("."),
-  //         message: detail.message,
-  //         type: detail.type,
-  //       }));
-  //       return next(
-  //         createHttpError(400, "Validation failed", {
-  //           errors: errorMessage,
-  //         })
-  //       );
-  //     }
-
-  //     console.log("validatedData:", validatedData);
-
-  //     /**
-  //      * Store product image in S3 and
-  //      * Retreive URL image and store in db
-  //      */
-  //     const productImageFiles = req.files;
-  //     let productImageURLs = [];
-  //     try {
-  //       productImageURLs = await multipleFileUploadS3({
-  //         filePath: "UI/product-image",
-  //         files: productImageFiles,
-  //       });
-  //     } catch (error) {
-  //       next(createHttpError(400, "Failed to upload file"));
-  //     }
-
-  //     // Generate sku
-  //     // const category = await CategoryModel.findById(validatedData.categoryId);
-  //     const category = await CategoryModel.find({});
-  //     console.log(category);
-  //     const sku = generateSKU(category.name);
-
-  //     await ProductModel.create({
-  //       sku: sku,
-  //       slug: slug,
-  //       name: validatedData.name,
-  //       description: validatedData.description,
-  //       categoryId: validatedData.categoryId,
-  //       tags: validatedData.tags,
-  //       attributes: {
-  //         material: validatedData.attributes.material,
-  //         brand: validatedData.attributes.brand,
-  //       },
-  //       images: productImageURLs,
-  //     });
-
-  //     res.status(201).json({
-  //       success: true,
-  //       message: "New Product Created",
-  //     });
-  //   } catch (error) {
-  //     console.error("error in create product:", error);
-  //     next(createHttpError(500, "Internal Server Error"));
-  //   }
-  // },
-
-  // createProductVariant: async (req, res, next) => {},
-
-  // updateProduct: async (req, res, next) => {},
 
   updateProduct: async (req, res, next) => {
     try {
@@ -389,19 +318,30 @@ const ProductController = {
       }
 
       // Store product images in S3
-      const productImageFiles = req.files;
-      let productImageURLs = [];
+      const mainImageFile = req.files.mainImage?.[0];
+      const productImageFile = req.files.productImage;
+
+      let mainImageURL = undefined;
       try {
-        productImageURLs = await multipleFileUploadS3({
-          filePath: "UI/product-image",
-          files: productImageFiles,
+        if (mainImageFile) {
+          mainImageURL = await fileUploadS3({
+            filePath: "UI/product-image",
+            file: mainImageFile,
+          });
+        }
+      } catch (error) {
+        return next(createHttpError(400, error.message));
+      }
+
+      let productImageURL = [];
+      try {
+        productImageURL = await multipleFileUploadS3({
+          filePath: "UI/package-banner-image",
+          files: productImageFile,
         });
       } catch (error) {
-        next(
-          createHttpError(400, {
-            errorAPI: "PATCH: admin update product",
-            message: "Failed to upload file",
-          })
+        return next(
+          createHttpError(400, error.message, { message: error.message })
         );
       }
 
@@ -440,11 +380,12 @@ const ProductController = {
         }
       }
 
-      if (productImageURLs.length > 0) {
-        product.images.push(...productImageURLs);
-        if (!product.mainImage) {
-          product.mainImage = product.images[0];
-        }
+      if (mainImageURL) {
+        product.mainImage = mainImageURL;
+      }
+
+      if (productImageURL.length > 0) {
+        product.images.push(...productImageURL);
       }
 
       if (updateSlug) {
