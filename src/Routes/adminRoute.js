@@ -195,12 +195,18 @@ AdminRoute.get("/product/:productId", ProductController.getSingleProduct);
 AdminRoute.get("/product/edit/:productId", ProductController.getProductForEdit);
 AdminRoute.post(
   "/create-product",
-  upload.array("images", 10),
+  upload.fields([
+    { name: "mainImage", maxCount: 1 },
+    { name: "productImage", maxCount: 10 },
+  ]),
   ProductController.createProduct
 );
 AdminRoute.patch(
   "/product/:productId",
-  upload.array("images", 10),
+  upload.fields([
+    { name: "mainImage", maxCount: 1 },
+    { name: "productImage", maxCount: 10 },
+  ]),
   ProductController.updateProduct
 );
 AdminRoute.delete("/product/:productId", ProductController.deleteProduct);
