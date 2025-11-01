@@ -750,7 +750,7 @@ const GetSingleProduct = async (req, res, next) => {
     const { productSlug } = req.params;
     const product = await ProductModel.findOne({ slug: productSlug })
       .select(
-        `-_id stock productId slug name description discount discountPrice originalPrice productType 
+        `-_id stock productId slug name description discount discountPrice originalPrice productType mainImage
         images category tags status variants.variantId variants.stock variants.discount variants.discountPrice 
         variants.originalPrice variants.status`
       )
