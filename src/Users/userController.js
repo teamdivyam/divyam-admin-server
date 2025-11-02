@@ -24,6 +24,7 @@ import TierModel from "../models/tier.model.js";
 import AreaRadiusModel from "../models/arearadius.model.js";
 import { checkMultipleStocks } from "../services/user.service.js";
 import { Category, ProductStatus } from "../utils/modelConstants.js";
+import convertDecimal from "../utils/convertDecimal.js";
 
 // Register User with Mobile Number..
 const RegisterUser = async (req, res, next) => {
@@ -818,13 +819,15 @@ const GetPackages = async (req, res, next) => {
       )
       .skip((page - 1) * limit)
       .limit(limit)
-      // .exec();
+      .lean();
+
+    const cleanPackageData = convertDecimal(packages);
 
     const total = await PackageModel.countDocuments(filter);
 
     res.status(200).json({
       success: true,
-      packages: packages,
+      packages: cleanPackageData,
       total,
       page,
       totalPages: Math.ceil(total / limit),
@@ -852,15 +855,18 @@ const GetSinglePackage = async (req, res, next) => {
           select: "-_id quantity variantAttributes",
         },
       })
-      // .lean();
+      .lean();
 
+    const cleanPackageData = convertDecimal(packageData);
     if (!packageData) {
       return next(createHttpError(404, "Package not found"));
     }
 
+    // return res.json({pkg: packageData}); 
+
     const filterPackageData = {
-      ...packageData,
-      products: packageData.products
+      ...cleanPackageData,
+      products: cleanPackageData.products
         .map((product) => {
           const isArrayVariants = Array.isArray(
             product.productObjectId.variants
