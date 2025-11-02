@@ -818,7 +818,7 @@ const GetPackages = async (req, res, next) => {
       )
       .skip((page - 1) * limit)
       .limit(limit)
-      .exec();
+      // .exec();
 
     const total = await PackageModel.countDocuments(filter);
 
@@ -852,7 +852,7 @@ const GetSinglePackage = async (req, res, next) => {
           select: "-_id quantity variantAttributes",
         },
       })
-      .lean();
+      // .lean();
 
     if (!packageData) {
       return next(createHttpError(404, "Package not found"));
