@@ -39,7 +39,7 @@ const PackageController = {
         .select(`packageId packageName isVisible capacity discountPrice slug`)
         .skip((page - 1) * limit) 
         .limit(limit)
-        .lean();
+        // .lean();
 
       const totalPackages = await PackageModel.countDocuments(filter);
 
@@ -70,7 +70,7 @@ const PackageController = {
           path: "tierObjectId",
           select: "tierName",
         })
-        .lean();
+        // .lean();
 
       res.status(200).json({
         success: true,
@@ -98,7 +98,7 @@ const PackageController = {
           path: "tierObjectId",
           select: "tierName",
         })
-        .lean();
+        // .lean();
 
       res.status(200).json({
         success: true,
@@ -236,9 +236,6 @@ const PackageController = {
         isVisible,
         policy,
       } = req.body;
-
-      console.log("req,body:", req.body);
-      console.log("req,file:", req.files);
 
       const { packageId } = req.params;
 
