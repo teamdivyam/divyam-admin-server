@@ -8,6 +8,7 @@ import slugify from "slugify";
 import { v4 as uuidv4 } from "uuid";
 import { fileUploadS3, multipleFileUploadS3 } from "../utils/uploadFileS3.js";
 import { deleteFileS3, deleteMultipleFilesS3 } from "../utils/deleteFileS3.js";
+import convertDecimal from "../utils/convertDecimal.js";
 
 const PackageController = {
   getPackage: async (req, res, next) => {
@@ -32,20 +33,22 @@ const PackageController = {
 
       // Visibility filter
       if (isVisible) {
-        filter.isVisible = isVisible
+        filter.isVisible = isVisible;
       }
 
       const packages = await PackageModel.find(filter)
         .select(`packageId packageName isVisible capacity discountPrice slug`)
-        .skip((page - 1) * limit) 
+        .skip((page - 1) * limit)
         .limit(limit)
-        // .lean();
+        .lean();
 
       const totalPackages = await PackageModel.countDocuments(filter);
 
+      const cleanPackageData = convertDecimal(packages);
+
       res.status(200).json({
         success: true,
-        packages: packages,
+        packages: cleanPackageData,
         totalRows: totalPackages,
       });
     } catch (error) {
@@ -70,11 +73,13 @@ const PackageController = {
           path: "tierObjectId",
           select: "tierName",
         })
-        // .lean();
+        .lean();
+
+      const cleanPackageData = convertDecimal(packageData);
 
       res.status(200).json({
         success: true,
-        package: packageData,
+        package: cleanPackageData,
       });
     } catch (error) {
       console.error("error in get single package:", error);
@@ -98,11 +103,13 @@ const PackageController = {
           path: "tierObjectId",
           select: "tierName",
         })
-        // .lean();
+        .lean();
+
+      const cleanPackageData = convertDecimal(packageData);
 
       res.status(200).json({
         success: true,
-        package: packageData,
+        package: cleanPackageData,
       });
     } catch (error) {
       console.error("error in get single package:", error);
@@ -210,7 +217,7 @@ const PackageController = {
         slug: slug,
         policy: policy,
       });
-      
+
       res.status(201).json({
         success: true,
         message: "New Package Created",
