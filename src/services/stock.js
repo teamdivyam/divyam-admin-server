@@ -27,7 +27,10 @@ export const getAllStocks = async () => {
 
 export const getStockQuantity = async () => {
   try {
-    const result = await StockModel.countDocuments({ status: "active", isVariant: false });
+    const result = await StockModel.countDocuments({
+      status: "active",
+      isVariant: false,
+    });
 
     return result;
   } catch (error) {
@@ -37,7 +40,10 @@ export const getStockQuantity = async () => {
 
 export const getVariantStockQuantity = async () => {
   try {
-    const result = await StockModel.countDocuments({ status: "active", isVariant: true });
+    const result = await StockModel.countDocuments({
+      status: "active",
+      isVariant: true,
+    });
 
     return result;
   } catch (error) {
@@ -48,7 +54,7 @@ export const getVariantStockQuantity = async () => {
 export const checkStockAlreadyExists = async (name) => {
   try {
     const isStockExists = await StockModel.findOne({
-      name: { $regex: new RegExp(name, "i") },
+      name,
     });
 
     if (isStockExists) {

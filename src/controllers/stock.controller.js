@@ -192,7 +192,11 @@ const StockController = {
           }
 
           if (await checkStockAlreadyExists(validatedData.variantStockName)) {
-            return next(createHttpError(409, "Stock already existed"));
+            return next(
+              createHttpError(409, {
+                message: `${validatedData.variantStockName} name stock already existed`,
+              })
+            );
           }
 
           const skuVarientStock = generateStockId(
@@ -259,7 +263,11 @@ const StockController = {
 
           // First Create Parent Stock
           if (await checkStockAlreadyExists(validatedData.parentStockName)) {
-            return next(createHttpError(409, "Stock already existed"));
+            return next(
+              createHttpError(409, {
+                message: `${validatedData.parentStockName} name stock already existed`,
+              })
+            );
           }
           const skuParentStock = generateStockId(
             validatedData.parentStockCategory

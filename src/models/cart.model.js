@@ -2,21 +2,29 @@ import mongoose from "mongoose";
 
 const ProductCartSchema = new mongoose.Schema(
   {
-    productId: {
-      type: String,
-      required: true,
+    product: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Product",
+    },
+    stock: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Stock",
     },
     variantId: String,
-    sku: String,
-    productName: String,
-    variantName: String,
-    slug: String,
-    productImage: String,
     quantity: { type: Number, min: 1, default: 1 },
-    availableQuantity: { type: Number },
-    originalPrice: Number,
-    discount: Number,
-    discountPrice: Number,
+    // productId: {
+    //   type: String,
+    //   required: true,
+    // },
+    // sku: String,
+    // productName: String,
+    // variantName: String,
+    // slug: String,
+    // productImage: String,
+    // availableQuantity: { type: Number },
+    // originalPrice: Number,
+    // discount: Number,
+    // discountPrice: Number,
   },
   {
     _id: false,

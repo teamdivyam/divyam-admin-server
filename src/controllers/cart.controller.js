@@ -5,14 +5,14 @@ import ProductModel from "../models/product.model.js";
 import StockModel from "../models/stock.model.js";
 import { generateCartID } from "../utils/generateID.js";
 import PackageModel from "../models/package.model.js";
+import { calculateCartPrice, getUserCart } from "../services/cart.service.js";
 
 const CartController = {
   getUserCart: async (req, res, next) => {
     try {
-      const userId = req.user?.id; //|| "68c3cb85a9c5ba595313aa9a";
-      const cart = await CartModel.findOne({ userId: userId }).select(
-        "-_id productCartList packageCartList subTotal total"
-      );
+      const userId = req.user?.id || "68c3cb85a9c5ba595313aa9a";
+      const cart = await getUserCart(userId);
+
       res.status(200).json({
         success: true,
         cart: cart,
@@ -26,7 +26,7 @@ const CartController = {
 
   addItemInCart: async (req, res, next) => {
     try {
-      const userId = req.user?.id //|| "68c3cb85a9c5ba595313aa9a";
+      const userId = req.user?.id || "68c3cb85a9c5ba595313aa9a";
 
       const { error, value } = UpdateCartResponseBodySchema.validate(req.body, {
         stripUnkown: true,
@@ -83,67 +83,21 @@ const CartController = {
           const productVariant = product.variants.find(
             (variant) => variant.variantId === variantId
           );
-          const stock = await StockModel.findById(productVariant.stock).select(
-            "sku quantity"
-          );
 
           userCart.productCartList.push({
-            productId: product.productId,
-            variantId: productVariant.variantId,
-            sku: stock.sku,
-            productName: product.name,
-            variantName: productVariant.variantName,
-            slug: product.slug,
-            productImage: product.mainImage,
+            product: product._id,
+            stock: productVariant.stock,
+            variantId: variantId,
             quantity: quantity,
-            availableQuantity: stock.quantity,
-            originalPrice: productVariant.originalPrice,
-            discount: productVariant.discount,
-            discountPrice: productVariant.discountPrice,
-          });
-        }
-      } else {
-        /** Cart Product with No Variant */
-        const isItemAlreadyInCart = userCart.productCartList.find(
-          (item) => item.productId === itemId
-        );
-        if (isItemAlreadyInCart) {
-          return next(createHttpError(409, "Item in cart already existed!"));
-        } else {
-          const product = await ProductModel.findOne({ productId: itemId });
-          const stock = await StockModel.findById(product.stock)
-
-          userCart.productCartList.push({
-            productId: itemId,
-            sku: stock.sku,
-            slug: product.slug,
-            productImage: product.mainImage,
-            quantity: quantity,
-            originalPrice: product.originalPrice,
-            discount: product.discount,
-            discountPrice: product.discountPrice,
           });
         }
       }
 
-      const cartSubTotalPackage = userCart.packageCartList.reduce(
-        (sum, item) => {
-          return sum + item.discountPrice * item.quantity;
-        },
-        0
-      );
-      const cartSubTotalProduct = userCart.productCartList.reduce(
-        (sum, item) => {
-          return sum + item.discountPrice * item.quantity;
-        },
-        0
-      );
-      userCart.subTotal =
-        Number(cartSubTotalPackage.toFixed(2)) +
-        Number(cartSubTotalProduct.toFixed(2));
-      userCart.total =
-        Number(cartSubTotalPackage.toFixed(2)) +
-        Number(cartSubTotalProduct.toFixed(2));
+      await userCart.save();
+
+      const subTotal = await calculateCartPrice(userCart.cartId);
+      userCart.subTotal = subTotal;
+      userCart.total = subTotal;
 
       await userCart.save();
 
@@ -156,7 +110,7 @@ const CartController = {
 
   updateItemInCart: async (req, res, next) => {
     try {
-      const userId = req.user?.id; // "68c3cb85a9c5ba595313aa9a";
+      const userId = req.user?.id || "68c3cb85a9c5ba595313aa9a";
       const { itemType, itemId, variantId, quantity, action } = req.body;
 
       const userCart = await CartModel.findOne({ userId: userId });
@@ -207,24 +161,11 @@ const CartController = {
         }
       }
 
-      const cartSubTotalPackage = userCart.packageCartList.reduce(
-        (sum, item) => {
-          return sum + item.discountPrice * item.quantity;
-        },
-        0
-      );
-      const cartSubTotalProduct = userCart.productCartList.reduce(
-        (sum, item) => {
-          return sum + item.discountPrice * item.quantity;
-        },
-        0
-      );
-      userCart.subTotal =
-        Number(cartSubTotalPackage.toFixed(2)) +
-        Number(cartSubTotalProduct.toFixed(2));
-      userCart.total =
-        Number(cartSubTotalPackage.toFixed(2)) +
-        Number(cartSubTotalProduct.toFixed(2));
+      await userCart.save();
+
+      const subTotal = await calculateCartPrice(userCart.cartId);
+      userCart.subTotal = subTotal;
+      userCart.total = subTotal;
 
       await userCart.save();
 
@@ -240,7 +181,7 @@ const CartController = {
 
   deleteItemInCart: async (req, res, next) => {
     try {
-      const userId = req.user?.id; // "68c3cb85a9c5ba595313aa9a";
+      const userId = req.user?.id || "68c3cb85a9c5ba595313aa9a";
       const { itemType, itemId, variantId } = req.body;
 
       const userCart = await CartModel.findOne({ userId: userId });
@@ -268,24 +209,11 @@ const CartController = {
         userCart.productCartList = filterProductCartList;
       }
 
-      const cartSubTotalPackage = userCart.packageCartList.reduce(
-        (sum, item) => {
-          return sum + item.discountPrice * item.quantity;
-        },
-        0
-      );
-      const cartSubTotalProduct = userCart.productCartList.reduce(
-        (sum, item) => {
-          return sum + item.discountPrice * item.quantity;
-        },
-        0
-      );
-      userCart.subTotal =
-        Number(cartSubTotalPackage.toFixed(2)) +
-        Number(cartSubTotalProduct.toFixed(2));
-      userCart.total =
-        Number(cartSubTotalPackage.toFixed(2)) +
-        Number(cartSubTotalProduct.toFixed(2));
+      await userCart.save();
+
+      const subTotal = await calculateCartPrice(userCart.cartId);
+      userCart.subTotal = subTotal;
+      userCart.total = subTotal;
 
       await userCart.save();
 

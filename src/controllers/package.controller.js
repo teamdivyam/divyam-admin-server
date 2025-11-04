@@ -1,11 +1,8 @@
 import createHttpError from "http-errors";
 import PackageModel from "../models/package.model.js";
 import { PackageSchema } from "../Validators/package.js";
-import { PutObjectCommand } from "@aws-sdk/client-s3";
-import { S3ClientConfig } from "../config/aws.js";
 import { generatePackageID } from "../utils/generateID.js";
 import slugify from "slugify";
-import { v4 as uuidv4 } from "uuid";
 import { fileUploadS3, multipleFileUploadS3 } from "../utils/uploadFileS3.js";
 import { deleteFileS3, deleteMultipleFilesS3 } from "../utils/deleteFileS3.js";
 import convertDecimal from "../utils/convertDecimal.js";

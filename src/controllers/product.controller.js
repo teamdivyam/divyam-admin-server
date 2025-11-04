@@ -298,8 +298,6 @@ const ProductController = {
       const { productId } = req.params;
       const formData = req.body;
 
-      console.log("hell:", formData);
-
       // checking product name is already taken or not
       let updateSlug = null;
       if (formData.name) {
@@ -441,11 +439,7 @@ const ProductController = {
       const { productId } = req.params;
       const { imageURL } = req.query;
 
-      console.log("product id:", productId);
-      console.log("image URL:", imageURL);
-
       const deletedImage = await deleteFileS3(imageURL);
-      console.log("images deleted:", deletedImage);
       if (deletedImage.success) {
         const product = await ProductModel.findOne({ productId });
         if (product.mainImage === imageURL) {

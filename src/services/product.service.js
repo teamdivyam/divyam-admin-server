@@ -3,15 +3,6 @@ import StockModel from "../models/stock.model.js";
 import generateVariantID from "../utils/generateVariantID.js";
 import { ProductType } from "../utils/modelConstants.js";
 
-export const checkProductAvailability = async (res, req) => {
-  // try {
-  //     const { productList, checkDate, }
-  // } catch (error) {
-  //     console.error("error: service check product availability", error);
-  //     throw error;
-  // }
-};
-
 export const getTotalProduct = async () => {
   try {
     const result = await ProductModel.countDocuments({ status: "active" });
@@ -67,3 +58,5 @@ export const processedVariantObject = async (validData) => {
     throw error;
   }
 };
+
+
