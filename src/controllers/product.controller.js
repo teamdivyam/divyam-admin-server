@@ -444,12 +444,10 @@ const ProductController = {
         const product = await ProductModel.findOne({ productId });
         if (product.mainImage === imageURL) {
           product.mainImage = null;
-          if (product.images.length > 0) {
-            product.mainImage = product.images[0];
-          }
+        } else {
+          const filterImages = product.images.filter((img) => img !== imageURL);
+          product.images = filterImages;
         }
-        const filterImages = product.images.filter((img) => img !== imageURL);
-        product.images = filterImages;
 
         await product.save();
       }
