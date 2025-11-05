@@ -456,11 +456,12 @@ const StockController = {
         // delete product associate with this stock
         const product = await ProductModel.findOne({ stock: stock._id });
 
-        // Delete images in package in S3
-        await deleteFileS3(product.mainImage);
-        await deleteMultipleFilesS3(product.images);
-
-        await ProductModel.deleteOne({ stock: stock._id }, { session });
+        if (product) {
+          // Delete images in package in S3
+          await deleteFileS3(product.mainImage);
+          await deleteMultipleFilesS3(product.images);
+          await ProductModel.deleteOne({ stock: stock._id }, { session });
+        }
       }
 
       await StockModel.findByIdAndDelete(stock._id, {
