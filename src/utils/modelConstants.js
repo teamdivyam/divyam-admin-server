@@ -46,7 +46,6 @@ export const ProductStatus = {
 };
 
 export const Category = {
-  LEDCounter: "LED Counter",
   cooking: "cooking",
   dining: "dining",
   serving: "serving",
