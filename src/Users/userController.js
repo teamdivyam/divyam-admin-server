@@ -689,48 +689,143 @@ const GetProducts = async (req, res, next) => {
       productType = "all",
     } = req.query;
 
-    // Build the filter object
-    const filter = {};
+    // // Build the filter object
+    // const filter = {};
 
-    // Text search across name and tags
+    // // Text search across name and tags
+    // if (searchTerm) {
+    //   filter.$or = [
+    //     { name: { $regex: searchTerm, $options: "i" } },
+    //     { tags: { $regex: searchTerm, $options: "i" } },
+    //   ];
+    // }
+
+    // // Status
+    // filter.status = ProductStatus.active;
+
+    // // Price range filter
+    // if (minPrice !== undefined || maxPrice !== undefined) {
+    //   filter.discountPrice = {};
+    //   if (minPrice !== undefined) filter.discountPrice.$gte = Number(minPrice);
+    //   if (maxPrice !== undefined) filter.discountPrice.$lte = Number(maxPrice);
+    // }
+
+    // // Category filter
+    // if (category) {
+    //   filter.category = category;
+    // }
+
+    // if (productType !== "all") {
+    //   filter.productType = productType;
+    // }
+
+    // const products = await ProductModel.find(filter, {
+    //   variants: { $slice: 1 },
+    // })
+    //   .select(
+    //     `-_id productId name discount discountPrice originalPrice
+    //     mainImage category tags status slug productType`
+    //   )
+    //   .skip((page - 1) * limit)
+    //   .limit(limit)
+    //   .exec();
+
+    // Custom category order
+    const categoryOrder = [
+      "LED Counter",
+      "decoration",
+      "cooking",
+      "dining",
+      "serving",
+      "others",
+    ];
+
+    const pipeline = [];
+
+    // ----------------------------
+    // 1. MATCH FILTERS
+    // ----------------------------
+    const match = {};
+
+    // Text search
     if (searchTerm) {
-      filter.$or = [
+      match.$or = [
         { name: { $regex: searchTerm, $options: "i" } },
         { tags: { $regex: searchTerm, $options: "i" } },
       ];
     }
-  
-    // Status
-    filter.status = ProductStatus.active;
 
-    // Price range filter
+    // Status
+    match.status = ProductStatus.active;
+
+    // Price filter
     if (minPrice !== undefined || maxPrice !== undefined) {
-      filter.discountPrice = {};
-      if (minPrice !== undefined) filter.discountPrice.$gte = Number(minPrice);
-      if (maxPrice !== undefined) filter.discountPrice.$lte = Number(maxPrice);
+      match.discountPrice = {};
+      if (minPrice !== undefined) match.discountPrice.$gte = Number(minPrice);
+      if (maxPrice !== undefined) match.discountPrice.$lte = Number(maxPrice);
     }
 
     // Category filter
-    if (category) {
-      filter.category = category;
-    }
+    if (category) match.category = category;
 
-    if (productType !== "all") {
-      filter.productType = productType;
-    }
+    // Product type filter
+    if (productType !== "all") match.productType = productType;
 
-    const products = await ProductModel.find(filter, {
-      variants: { $slice: 1 },
-    })
-      .select(
-        `-_id productId name discount discountPrice originalPrice 
-        mainImage category tags status slug productType`
-      )
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .exec();
+    pipeline.push({ $match: match });
 
-    const total = await ProductModel.countDocuments(filter);
+    // ----------------------------
+    // 2. ADD CUSTOM CATEGORY ORDER FIELD
+    // ----------------------------
+    pipeline.push({
+      $addFields: {
+        categoryPriority: {
+          $indexOfArray: [categoryOrder, "$category"],
+        },
+      },
+    });
+
+    // ----------------------------
+    // 3. SORT BY CUSTOM CATEGORY ORDER
+    // ----------------------------
+    pipeline.push({
+      $sort: {
+        categoryPriority: 1,
+      },
+    });
+
+    // ----------------------------
+    // 4. PROJECT FIELDS (same as .select)
+    // ----------------------------
+    pipeline.push({
+      $project: {
+        _id: 0,
+        productId: 1,
+        name: 1,
+        discount: 1,
+        discountPrice: 1,
+        originalPrice: 1,
+        mainImage: 1,
+        category: 1,
+        tags: 1,
+        status: 1,
+        slug: 1,
+        productType: 1,
+        variants: { $slice: ["$variants", 1] },
+      },
+    });
+
+    // ----------------------------
+    // 5. PAGINATION
+    // ----------------------------
+    pipeline.push({ $skip: (page - 1) * limit });
+    pipeline.push({ $limit: parseInt(limit) });
+
+    // ----------------------------
+    // EXECUTE AGGREGATION
+    // ----------------------------
+    const products = await ProductModel.aggregate(pipeline);
+
+    const total = await ProductModel.countDocuments(match);
 
     res.status(200).json({
       success: true,
@@ -763,7 +858,7 @@ const GetSingleProduct = async (req, res, next) => {
         path: "variants.stock",
         select:
           "-_id sku name category quantity status attributes remarks guestCapacity",
-      })
+      });
 
     if (!product) {
       return next(createHttpError(404, "Product not found"));
@@ -862,7 +957,7 @@ const GetSinglePackage = async (req, res, next) => {
       return next(createHttpError(404, "Package not found"));
     }
 
-    // return res.json({pkg: packageData}); 
+    // return res.json({pkg: packageData});
 
     const filterPackageData = {
       ...cleanPackageData,
