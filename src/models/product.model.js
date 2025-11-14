@@ -5,6 +5,19 @@ import {
   ProductType,
 } from "../utils/modelConstants.js";
 
+const ImageSchema = new mongoose.Schema(
+  {
+    original: String,
+    icon: String,
+    small: String,
+    medium: String,
+    large: String,
+  },
+  {
+    _id: false,
+  }
+);
+
 const VariantSchema = new mongoose.Schema(
   {
     stock: {
@@ -122,6 +135,10 @@ const ProductSchema = new mongoose.Schema({
     enum: Object.values(ProductType),
     default: ProductType.rental,
   },
+
+  /** Updated Property */
+  mainImageEnhance: ImageSchema,
+  imageEnhance: { type: [ImageSchema], default: [] },
 });
 
 ProductSchema.set("toJSON", { getters: true });
