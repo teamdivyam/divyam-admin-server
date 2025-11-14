@@ -81,65 +81,70 @@ const VariantSchema = new mongoose.Schema(
   { _id: false }
 );
 
-const ProductSchema = new mongoose.Schema({
-  stock: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Stock",
-    required: true,
-  },
-  productId: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  slug: { type: String, unique: true },
-  name: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-  description: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-  category: {
-    type: String,
-    enum: Object.values(Category),
-    default: Category.others,
-  },
-  mainImage: {
-    type: String,
-  },
-  images: {
-    type: [String],
-    default: [],
-  },
-  tags: {
-    type: [String],
-    default: [],
-  },
-  status: {
-    type: String,
-    enum: Object.values(ProductStatus),
-    default: ProductStatus.active,
-  },
-  variants: [
-    {
-      type: VariantSchema,
+const ProductSchema = new mongoose.Schema(
+  {
+    stock: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Stock",
+      required: true,
+    },
+    productId: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    slug: { type: String, unique: true },
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    description: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    category: {
+      type: String,
+      enum: Object.values(Category),
+      default: Category.others,
+    },
+    mainImage: {
+      type: String,
+    },
+    images: {
+      type: [String],
       default: [],
     },
-  ],
-  productType: {
-    type: String,
-    enum: Object.values(ProductType),
-    default: ProductType.rental,
-  },
+    tags: {
+      type: [String],
+      default: [],
+    },
+    status: {
+      type: String,
+      enum: Object.values(ProductStatus),
+      default: ProductStatus.active,
+    },
+    variants: [
+      {
+        type: VariantSchema,
+        default: [],
+      },
+    ],
+    productType: {
+      type: String,
+      enum: Object.values(ProductType),
+      default: ProductType.rental,
+    },
 
-  /** Updated Property */
-  mainImageEnhance: ImageSchema,
-  imageEnhance: { type: [ImageSchema], default: [] },
-});
+    /** Updated Property */
+    mainImageEnhance: ImageSchema,
+    imageEnhance: { type: [ImageSchema], default: [] },
+  },
+  {
+    timestamps: true,
+  }
+);
 
 ProductSchema.set("toJSON", { getters: true });
 ProductSchema.set("toObject", { getters: true });
