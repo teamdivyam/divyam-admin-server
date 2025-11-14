@@ -254,7 +254,7 @@ const ProductController = {
       let productImageURL = [];
       try {
         productImageURL = await multipleFileUploadS3({
-          filePath: "UI/package-banner-image",
+          filePath: "UI/product-image",
           files: productImageFile,
         });
       } catch (error) {
@@ -334,7 +334,7 @@ const ProductController = {
       let productImageURL = [];
       try {
         productImageURL = await multipleFileUploadS3({
-          filePath: "UI/package-banner-image",
+          filePath: "UI/product-image",
           files: productImageFile,
         });
       } catch (error) {
