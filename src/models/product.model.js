@@ -140,6 +140,7 @@ const ProductSchema = new mongoose.Schema(
     /** Updated Property */
     mainImageEnhance: ImageSchema,
     imageEnhance: { type: [ImageSchema], default: [] },
+    sequence: Number,
   },
   {
     timestamps: true,
