@@ -790,7 +790,7 @@ const GetProducts = async (req, res, next) => {
     pipeline.push({
       $sort: {
         categoryPriority: 1,
-        updatedAt: 1
+        sequence: 1
       },
     });
 
